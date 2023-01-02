@@ -1,6 +1,6 @@
 ![Home_Assistant](https://img.shields.io/badge/Home-Assistant-blue) [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs) ![GitHub](https://img.shields.io/github/license/viktak/ha-cc-openweathermap_all)
 
-![https://github.com/Pigotka/ha-cc-jablotron-cloud/logo.png](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/logo.png)
+![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/logo.png)
 
 
 # Jablotron Cloud
