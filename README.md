@@ -63,3 +63,6 @@ To configure integration please fill credentials you use to access your MyJablot
 ## Missing functionality - will be added
 1. Temperature and humidity sensors
 2. Electricity sensors
+
+# Support
+![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/bmc_qr.png)
