@@ -61,7 +61,7 @@ To configure integration please fill credentials you use to access your MyJablot
 5. First entity get it's real state ony after 30s. Then it works like any other entity.
 
 ## Missing functionality - will be added
-1. Temperature and humidity sensors
+1. Temperature sensors
 2. Electricity sensors
 
 # Support
