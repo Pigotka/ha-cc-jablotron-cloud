@@ -1,0 +1,6 @@
+{
+  "name": "Jablotron Cloud",
+  "render_readme": true,
+  "iot_class": "Cloud Polling",
+  "homeassistant": "2022.9.0"
+}

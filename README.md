@@ -1,4 +1,6 @@
-![Home_Assistant](https://img.shields.io/badge/Home-Assistant-blue) [![hacs_badge](https://img.shields.io/badge/HACS-Custom-orange.svg)](https://github.com/custom-components/hacs) [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs) ![GitHub](https://img.shields.io/github/license/viktak/ha-cc-openweathermap_all)
+![Home_Assistant](https://img.shields.io/badge/Home-Assistant-blue)
+[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
+![GitHub](https://img.shields.io/github/license/viktak/ha-cc-openweathermap_all)
 
 ![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/logo.png)
 
@@ -56,6 +58,7 @@ To configure integration please fill credentials you use to access your MyJablot
 2. PG friendly names are not used. Although Jablotron webpage does show names of all components in human readable form the API version we are using right now does not provide names for PG's.
 3. Data are updated only every 30s
 4. Arming and disarming has no delay to leave the house.
+5. First entity get it's real state ony after 30s. Then it works like any other entity.
 
 ## Missing functionality - will be added
 1. Temperature and humidity sensors

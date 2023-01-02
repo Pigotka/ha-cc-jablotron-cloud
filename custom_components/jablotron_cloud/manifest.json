@@ -1,0 +1,13 @@
+{
+  "domain": "jablotron_cloud",
+  "name": "Jablotron Cloud",
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/jablotron_cloud",
+  "requirements": ["jablotronpy==0.10.0"],
+  "ssdp": [],
+  "zeroconf": [],
+  "homekit": {},
+  "dependencies": [],
+  "codeowners": ["@pigotka"],
+  "iot_class": "cloud_polling"
+}
