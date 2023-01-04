@@ -68,7 +68,7 @@ To configure integration please fill credentials you use to access your MyJablot
 ## Missing functionality - will be added
 
 1. Temperature sensors
-2. Electricity sensors
+2. Impulse counters
 
 # Support
 
