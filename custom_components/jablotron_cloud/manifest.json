@@ -2,7 +2,7 @@
   "domain": "jablotron_cloud",
   "name": "Jablotron Cloud",
   "config_flow": true,
-  "documentation": "https://www.home-assistant.io/integrations/jablotron_cloud",
+  "documentation": "https://github.com/Pigotka/ha-cc-jablotron-cloud",
   "issue_tracker": "https://github.com/Pigotka/ha-cc-jablotron-cloud/issues",
   "requirements": ["jablotronpy==0.2.1"],
   "ssdp": [],
