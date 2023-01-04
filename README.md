@@ -6,10 +6,12 @@
 
 
 # Jablotron Cloud
+
 HACS custom component for jablotron cloud integration
 
 
 ## About
+
 Integration works with MyJablotron web service available on https://www.jablonet.net/. It uses mobile API provided by JablotronPy library. It does not have full capabilities of web interface and some function are not yet supported by the integration. See the list of supported function below.
 
 **This component will set up the following platforms.**
@@ -17,13 +19,13 @@ Integration works with MyJablotron web service available on https://www.jablonet
 | Platform         | Description                         |
 | ---------------- | ----------------------------------- |
 | `binary_sensor`| To show programmable gates (PG) .   |
-| `alarm_control_panel`| To enable ARM/DISARM on individual secrions. |
-| `sensor`| To support temperature and eletricity sensors TBD... |
+| `alarm_control_panel`| To enable ARM/DISARM on individual sections. |
+| `sensor`| To support temperature and electricity sensors TBD... |
 
 ## HACS Installation
 
 1. Add this repository to "Custom repositories"
-2. Add and search for Jablotron Clound in HACS
+2. Add and search for Jablotron Cloud in HACS
 3. Install
 
 ## Manual Installation
@@ -46,23 +48,26 @@ To configure integration please fill credentials you use to access your MyJablot
 | ---------------- | ----------------------------------- |
 | `username` | Email associated with Jablotron cloud.   |
 | `password` | Password use to login into the webpage. |
-| `pin` | Optional. If you configure your keyboard pin this pin will be automatically used to ARM/DISARM section. If you leave this field empty you will have to enter pin everytime you manipulate with sections. |
+| `pin` | Optional. If you configure your keyboard pin this pin will be automatically used to ARM/DISARM section. If you leave this field empty you will have to enter pin every time you manipulate with sections. |
 
 ## Supported functionality
 
-1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal eny state you like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only partially. It can allso tell you state of you garage door or window contact sensors.
-2. Sections - every section is individual alarm control panel as it requires PIN codes to controll it and can be ARMED (Armed Away) or PARTIALY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
+1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal eny state you like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only partially. It can also tell you state of you garage door or window contact sensors.
+2. Sections - every section is individual alarm control panel as it requires PIN codes to control it and can be ARMED (Armed Away) or PARTIALLY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
 
 ## Known issues
-1. Section state is reported as ARMED even thoung it is armed partially - this is how the API reports it and will be unlikely possible to fix. You can see partialy armed states in you list of PG's.
+
+1. Section state is reported as ARMED even though it is armed partially - this is how the API reports it and will be unlikely possible to fix. You can see partially armed states in you list of PG's.
 2. PG friendly names are not used. Although Jablotron webpage does show names of all components in human readable form the API version we are using right now does not provide names for PG's.
 3. Data are updated only every 30s
 4. Arming and disarming has no delay to leave the house.
 5. First entity get it's real state ony after 30s. Then it works like any other entity.
 
 ## Missing functionality - will be added
+
 1. Temperature sensors
 2. Electricity sensors
 
 # Support
+
 ![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/bmc_qr.png)
