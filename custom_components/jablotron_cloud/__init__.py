@@ -5,7 +5,7 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from jablotronpy import Jablotron
+from jablotronpy.jablotronpy import Jablotron, UnexpectedResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME, Platform
@@ -16,7 +16,11 @@ from .const import DOMAIN, SERVICE_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.ALARM_CONTROL_PANEL]
+PLATFORMS: list[Platform] = [
+    Platform.ALARM_CONTROL_PANEL,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -24,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
-    pin = entry.data.get(CONF_PIN, "")
+    pin = entry.data[CONF_PIN]
 
     _LOGGER.debug("Preparing Jablotron data update coordinator")
 
@@ -81,24 +85,30 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             # Note: asyncio.TimeoutError and aiohttp.ClientError are already
             # handled by the data update coordinator.
             async with async_timeout.timeout(10):
-                if self.session_id is None:
+                is_first_update: bool = self.session_id is None
+                if is_first_update:
                     self.session_id = await self.hass.async_add_executor_job(
                         self.bridge.get_session_id
                     )
 
+                data = {}
                 services = await self.hass.async_add_executor_job(
                     self.bridge.get_services
                 )
-
-                data = {}
                 for service in services:
                     service_id = service[SERVICE_ID]
                     gates = await self.hass.async_add_executor_job(
                         self.bridge.get_programmable_gates, service_id
                     )
-                    service["gates"] = gates
-                    data[service_id] = service
+
+                    sections = await self.hass.async_add_executor_job(
+                        self.bridge.get_sections, service_id
+                    )
+                    data[service_id] = {}
+                    data[service_id]["service"] = service
+                    data[service_id]["gates"] = gates
+                    data[service_id]["sections"] = sections
 
                 return data
-        except Exception:  # pylint: disable=broad-except
+        except UnexpectedResponse:
             self.session_id = None

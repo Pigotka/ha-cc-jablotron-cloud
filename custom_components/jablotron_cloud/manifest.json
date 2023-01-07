@@ -4,12 +4,16 @@
   "config_flow": true,
   "documentation": "https://github.com/Pigotka/ha-cc-jablotron-cloud",
   "issue_tracker": "https://github.com/Pigotka/ha-cc-jablotron-cloud/issues",
-  "requirements": ["jablotronpy==0.2.1"],
+  "requirements": [
+    "jablotronpy==0.4.0"
+  ],
   "ssdp": [],
   "zeroconf": [],
   "homekit": {},
   "dependencies": [],
-  "codeowners": ["@pigotka"],
+  "codeowners": [
+    "@pigotka"
+  ],
   "iot_class": "cloud_polling",
   "version": "0.1.0"
 }

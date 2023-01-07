@@ -7,7 +7,7 @@ DOMAIN = "jablotron_cloud"
 SERVICE_ID = "service-id"
 SERVICE_TYPE = "service-type"
 
-PG_ID = "cloud-component-id"
+COMP_ID = "cloud-component-id"
 PG_STATE = "state"
 PG_STATE_OFF = "OFF"
 

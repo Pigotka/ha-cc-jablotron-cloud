@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     STATE_ALARM_ARMED_AWAY,
+    STATE_ALARM_ARMED_HOME,
     STATE_ALARM_ARMING,
     STATE_ALARM_DISARMED,
     STATE_ALARM_DISARMING,
@@ -20,14 +21,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import JablotronDataCoordinator
-from .const import DOMAIN, SERVICE_TYPE, Actions
+from .const import COMP_ID, DOMAIN, SERVICE_TYPE, Actions
 
 _LOGGER = logging.getLogger(__name__)
-
-
-def get_sections(bridge, service_id):
-    """Pools section data from Jablotron cloud."""
-    return bridge.get_sections(service_id)
 
 
 async def async_setup_entry(
@@ -43,24 +39,28 @@ async def async_setup_entry(
     if not services:
         return
 
-    for service_id in services:
-        _LOGGER.debug("Jablotron discovered one service: %s", service_id)
-
-        sections = await hass.async_add_executor_job(
-            get_sections, coordinator.bridge, service_id
+    for service_id, service_data in services.items():
+        service = service_data["service"]
+        _LOGGER.debug(
+            "Jablotron discovered service: %s:%s", service_id, service["name"]
         )
 
+        sections_data = service_data["sections"]
+        if not sections_data:
+            return
+
+        sections = sections_data["sections"]
         if not sections:
             return
 
         for section in sections:
             can_control = section["can-control"]
             if can_control:
-                _LOGGER.debug("Controllable section discovered: %s", section["name"])
-                component_id = section["cloud-component-id"]
+                friendly_name = section["name"]
+                component_id = section[COMP_ID]
                 partial_arm_enabled = bool(section["partial-arm-enabled"])
                 need_authorization = bool(section["need-authorization"])
-                friendly_name = section["name"]
+                _LOGGER.debug("Controllable section discovered: %s", friendly_name)
                 entities.append(
                     JablotronAlarmControlPanel(
                         coordinator,
@@ -86,9 +86,13 @@ class JablotronAlarmControlPanel(
 ):
     """Representation of an Jablotron cloud based alarm panel."""
 
-    _attr_name = "Jablotron Alarm Panel"
-    _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
+
+    _actions_to_state_alarm = {
+        Actions.ARM: STATE_ALARM_ARMED_AWAY,
+        Actions.DISARM: STATE_ALARM_DISARMED,
+        Actions.PARTIAL_ARM: STATE_ALARM_ARMED_HOME,
+    }
 
     def __init__(
         self: JablotronAlarmControlPanel,
@@ -107,12 +111,18 @@ class JablotronAlarmControlPanel(
         self._need_authorization = need_authorization
         self._attr_unique_id = f"{service_id} {component_id}"
         self._attr_name = friendly_name
-        self._use_configured_pin = len(self.coordinator.bridge.pin_code) > 0
+        self._default_pin = coordinator.bridge.pin_code
+        self._service_type = self.coordinator.data[service_id]["service"][SERVICE_TYPE]
+
+    @property
+    def code_format(self) -> CodeFormat | None:
+        """Disable code for sections that don't require it."""
+        return CodeFormat.NUMBER if self.code_arm_required else None
 
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self._need_authorization and not self._use_configured_pin
+        return self._need_authorization
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
@@ -126,67 +136,64 @@ class JablotronAlarmControlPanel(
         return AlarmControlPanelEntityFeature.ARM_AWAY
 
     def alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm command."""
-        if not self._validate_and_setup_code(code):
-            return
+        """Disarm section."""
+        self._setup_pin(code)
 
-        service_type = self.coordinator.data[self._service_id][SERVICE_TYPE]
         self.coordinator.bridge.control_component(
-            self._service_id, self._component_id, Actions.DISARM, service_type
+            self._service_id, self._component_id, Actions.DISARM, self._service_type
         )
         self._attr_state = STATE_ALARM_DISARMING
         self.async_write_ha_state()
 
     def alarm_arm_away(self, code: str | None = None) -> None:
-        """Send arm away command."""
-        if not self._validate_and_setup_code(code):
-            return
+        """Arm section."""
+        self._setup_pin(code)
 
-        service_type = self.coordinator.data[self._service_id][SERVICE_TYPE]
         self.coordinator.bridge.control_component(
-            self._service_id, self._component_id, Actions.ARM, service_type
+            self._service_id, self._component_id, Actions.ARM, self._service_type
         )
         self._attr_state = STATE_ALARM_ARMING
         self.async_write_ha_state()
 
     def alarm_arm_home(self, code: str | None = None) -> None:
-        """Send arm away command."""
+        """Partial arm section if allowed."""
         if not self._can_partial_arm:
-            _LOGGER.error("This action should not be triggered for this section")
+            _LOGGER.error("This action should not be available for this section")
             return
 
-        if not self._validate_and_setup_code(code):
-            return
-
-        service_type = self.coordinator.data[self._service_id][SERVICE_TYPE]
+        self._setup_pin(code)
         self.coordinator.bridge.control_component(
-            self._service_id, self._component_id, Actions.PARTIAL_ARM, service_type
+            self._service_id,
+            self._component_id,
+            Actions.PARTIAL_ARM,
+            self._service_type,
         )
         self._attr_state = STATE_ALARM_ARMING
         self.async_write_ha_state()
 
-    def _validate_and_setup_code(self, code: str | None) -> bool:
+    def _setup_pin(self, code: str | None) -> None:
         if self.code_arm_required:
-            if code is None:
-                _LOGGER.error("Code expected by the section but not provided")
-                return False
-            self.coordinator.bridge.pin_code = code
-        return True
+            pin = code if code is not None else self._default_pin
+            self.coordinator.bridge.pin_code = pin
+        else:
+            self.coordinator.bridge.pin_code = self._default_pin
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self._service_id not in self.coordinator.data:
-            _LOGGER.error("Invalid gate data. Maybe session expired")
+            _LOGGER.error("Invalid section data. Maybe session expired")
             return
 
-        service_data = self.coordinator.data[self._service_id]
-        states = service_data["extended-states"]
-        _LOGGER.debug("Alarm panel update state: %s", str(states))
-        disarm_state = next(filter(lambda data: data["type"] == "DISARM", states))
-        self._attr_state = (
-            STATE_ALARM_DISARMED
-            if int(disarm_state["value"])
-            else STATE_ALARM_ARMED_AWAY
+        sections_data = self.coordinator.data[self._service_id].get("sections", {})
+        states = sections_data.get("states", [])
+        if not states:
+            _LOGGER.warning("States data not found")
+            return
+
+        state = next(filter(lambda data: data[COMP_ID] == self._component_id, states))
+        _LOGGER.debug("Updating state: %s", str(state))
+        self._attr_state = self._actions_to_state_alarm.get(
+            state["state"], STATE_ALARM_DISARMED
         )
         self.async_write_ha_state()

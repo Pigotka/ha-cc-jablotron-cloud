@@ -4,10 +4,11 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from jablotronpy import Jablotron
+from jablotronpy.jablotronpy import Jablotron, UnexpectedResponse
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -18,9 +19,9 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required("username"): str,
-        vol.Required("password"): str,
-        vol.Optional("pin"): str,
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_PIN): str,
     }
 )
 
@@ -28,11 +29,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    pin = data.get("pin", "")
-    hub = Jablotron(data["username"], data["password"], pin)
+    hub = Jablotron(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
     try:
         await hass.async_add_executor_job(hub.get_session_id)
-    except Exception as ex:  # pylint: disable=broad-except
+    except UnexpectedResponse as ex:
         raise InvalidAuth from ex
 
     # Return info that you want to store in the config entry.

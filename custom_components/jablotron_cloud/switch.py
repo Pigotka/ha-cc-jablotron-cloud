@@ -1,9 +1,10 @@
-"""Support for Jablotron PG sensors."""
+"""Support for controllable Jablotron PG sensors."""
 from __future__ import annotations
 
 import logging
+from typing import Any
 
-from homeassistant.components.binary_sensor import BinarySensorEntity
+from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
@@ -38,14 +39,14 @@ async def async_setup_entry(
         gates = gates_data["programmableGates"]
         for gate in gates:
             can_control = gate["can-control"]
-            if can_control:
+            if not can_control:
                 continue
 
             gate_id = gate[COMP_ID]
             gate_friendly_name = gate["name"]
 
             _LOGGER.debug(
-                "Jablotron discovered uncontrollable programmable gate: %s:%s",
+                "Jablotron discovered controllable programmable gate: %s:%s",
                 gate_id,
                 gate_friendly_name,
             )
@@ -61,10 +62,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], BinarySensorEntity):
+class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity):
     """Representation of programmable gate in jablotron system."""
 
     _attr_has_entity_name = True
+    _attr_device_class = SwitchDeviceClass.SWITCH
 
     def __init__(
         self: ProgrammableGate,
@@ -79,6 +81,7 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], BinarySensor
         self._gate_id = gate_id
         self._attr_unique_id = f"{service_id} {gate_id}"
         self._attr_name = friendly_name
+        self._pin = coordinator.bridge.pin_code
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -92,6 +95,24 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], BinarySensor
             manufacturer="Jablotron",
             model=self.coordinator.data[self._service_id]["service"][SERVICE_TYPE],
         )
+
+    def turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        bridge = self.coordinator.bridge
+        bridge.pin_code = self._pin
+        _LOGGER.debug("Turning on gate: %s with pin: %s", self._gate_id, self._pin)
+        bridge.control_programmable_gate(self._service_id, self._gate_id, True)
+        self._attr_is_on = True  # assume state
+        self.async_write_ha_state()
+
+    def turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        bridge = self.coordinator.bridge
+        bridge.pin_code = self._pin
+        _LOGGER.debug("Turning off gate: %s with pin: %s", self._gate_id, self._pin)
+        bridge.control_programmable_gate(self._service_id, self._gate_id, False)
+        self._attr_is_on = False  # assume state
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
