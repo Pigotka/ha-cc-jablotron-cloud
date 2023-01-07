@@ -20,7 +20,8 @@ Integration works with MyJablotron web service available on https://www.jablonet
 
 | Platform         | Description                         |
 | ---------------- | ----------------------------------- |
-| `binary_sensor`| To show programmable gates (PG) .   |
+| `binary_sensor`| To show uncontrollable programmable gates (PG) .   |
+| `switch`| To controll programmable gates (PG) .   |
 | `alarm_control_panel`| To enable ARM/DISARM on individual sections. |
 | `sensor`| To support temperature and electricity sensors TBD... |
 
@@ -50,20 +51,18 @@ To configure integration please fill credentials you use to access your MyJablot
 | ---------------- | ----------------------------------- |
 | `username` | Email associated with Jablotron cloud.   |
 | `password` | Password use to login into the webpage. |
-| `pin` | Optional. If you configure your keyboard pin this pin will be automatically used to ARM/DISARM section. If you leave this field empty you will have to enter pin every time you manipulate with sections. |
+| `pin` | Default pin to controll PG's. User pin can be entered for every section later but at least one pin is required. |
 
 ## Supported functionality
 
-1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal eny state you like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only partially. It can also tell you state of you garage door or window contact sensors.
+1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal any state you like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only partially. It can also tell you state of you garage door or window contact sensors. Most of PG's can be controlled to trigger some Jablotron action.
 2. Sections - every section is individual alarm control panel as it requires PIN codes to control it and can be ARMED (Armed Away) or PARTIALLY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
 
 ## Known issues
 
-1. Section state is reported as ARMED even though it is armed partially - this is how the API reports it and will be unlikely possible to fix. You can see partially armed states in you list of PG's.
-2. PG friendly names are not used. Although Jablotron webpage does show names of all components in human readable form the API version we are using right now does not provide names for PG's.
-3. Data are updated only every 30s
-4. Arming and disarming has no delay to leave the house.
-5. First entity get it's real state ony after 30s. Then it works like any other entity.
+1. Data are updated only every 30s
+2. Arming and disarming has no delay to leave the house.
+3. First entity get it's real state ony after 30s. Then it works like any other entity.
 
 ## Missing functionality - will be added
 
