@@ -17,6 +17,7 @@ from homeassistant.const import (
     STATE_ALARM_DISARMING,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -135,6 +136,19 @@ class JablotronAlarmControlPanel(
 
         return AlarmControlPanelEntityFeature.ARM_AWAY
 
+    @property
+    def device_info(self) -> DeviceInfo:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={
+                # Serial numbers are unique identifiers within a specific domain
+                (DOMAIN, str(self._service_id))
+            },
+            name=self.coordinator.data[self._service_id]["service"]["name"],
+            manufacturer="Jablotron",
+            model=self.coordinator.data[self._service_id]["service"][SERVICE_TYPE],
+        )
+
     def alarm_disarm(self, code: str | None = None) -> None:
         """Disarm section."""
         self._setup_pin(code)
@@ -192,7 +206,7 @@ class JablotronAlarmControlPanel(
             return
 
         state = next(filter(lambda data: data[COMP_ID] == self._component_id, states))
-        _LOGGER.debug("Updating state: %s", str(state))
+        _LOGGER.debug("Updating section state: %s", str(state))
         self._attr_state = self._actions_to_state_alarm.get(
             state["state"], STATE_ALARM_DISARMED
         )

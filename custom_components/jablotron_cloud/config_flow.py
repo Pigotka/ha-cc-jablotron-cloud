@@ -4,7 +4,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from jablotronpy.jablotronpy import Jablotron, UnexpectedResponse
+from jablotronpy import Jablotron, UnexpectedResponse
 import voluptuous as vol
 
 from homeassistant import config_entries

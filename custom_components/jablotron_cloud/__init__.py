@@ -5,14 +5,14 @@ from datetime import timedelta
 import logging
 
 import async_timeout
-from jablotronpy.jablotronpy import Jablotron, UnexpectedResponse
+from jablotronpy import Jablotron, UnexpectedResponse
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import DOMAIN, SERVICE_ID
+from .const import DOMAIN, SERVICE_ID, SERVICE_TYPE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -97,17 +97,24 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 )
                 for service in services:
                     service_id = service[SERVICE_ID]
+                    service_type = service[SERVICE_TYPE]
                     gates = await self.hass.async_add_executor_job(
-                        self.bridge.get_programmable_gates, service_id
+                        self.bridge.get_programmable_gates, service_id, service_type
                     )
 
                     sections = await self.hass.async_add_executor_job(
-                        self.bridge.get_sections, service_id
+                        self.bridge.get_sections, service_id, service_type
+                    )
+
+                    thermo_devices = await self.hass.async_add_executor_job(
+                        self.bridge.get_thermo_devices, service_id, service_type
                     )
                     data[service_id] = {}
                     data[service_id]["service"] = service
                     data[service_id]["gates"] = gates
                     data[service_id]["sections"] = sections
+                    data[service_id]["thermo"] = thermo_devices
+                    _LOGGER.debug("Thermo data: %s", str(thermo_devices))
 
                 return data
         except UnexpectedResponse:
