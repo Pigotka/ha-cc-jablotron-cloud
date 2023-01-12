@@ -8,6 +8,7 @@ SERVICE_ID = "service-id"
 SERVICE_TYPE = "service-type"
 
 COMP_ID = "cloud-component-id"
+DEVICE_ID = "object-device-id"
 PG_STATE = "state"
 PG_STATE_OFF = "OFF"
 
