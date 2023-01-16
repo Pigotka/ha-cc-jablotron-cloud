@@ -14,7 +14,7 @@ HACS custom component for jablotron cloud integration
 
 ## About
 
-Integration works with MyJablotron web service available on https://www.jablonet.net/. It uses mobile API provided by JablotronPy library. It does not have full capabilities of web interface and some function are not yet supported by the integration. See the list of supported function below.
+Integration works with MyJablotron web service available on https://www.jablonet.net/. It uses mobile API provided by [JablotronPy](https://github.com/fdegier/JablotronPy) library. It does not have full capabilities of web interface and some function are not yet supported by the integration. See the list of supported function below.
 
 **This component will set up the following platforms.**
 
