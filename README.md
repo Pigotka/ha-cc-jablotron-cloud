@@ -23,13 +23,14 @@ Integration works with MyJablotron web service available on https://www.jablonet
 | `binary_sensor`| To show uncontrollable programmable gates (PG) .   |
 | `switch`| To controll programmable gates (PG) .   |
 | `alarm_control_panel`| To enable ARM/DISARM on individual sections. |
-| `sensor`| To support temperature and electricity sensors TBD... |
+| `sensor`| To support temperature and electricity sensors. |
 
 ## HACS Installation
 
-1. Add this repository to "Custom repositories"
-2. Add and search for Jablotron Cloud in HACS
+1. Add repository using "+Explore & download repositories" button in HACS inside integrations section
+2. Search for Jablotron Cloud in HACS
 3. Install
+4. In HA add new integration and select Jablotron Cloud.
 
 ## Manual Installation
 
@@ -66,8 +67,8 @@ To configure integration please fill credentials you use to access your MyJablot
 
 ## Missing functionality - will be added
 
-1. Temperature sensors
-2. Impulse counters
+1. Impulse counters
+2. Alarm event detection
 
 # Support
 
