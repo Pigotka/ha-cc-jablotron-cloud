@@ -96,7 +96,7 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], BinarySensor
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self._service_id not in self.coordinator.data:
+        if not self.coordinator.data or self._service_id not in self.coordinator.data:
             _LOGGER.error("Invalid gate data. Maybe session expired")
             return
 
