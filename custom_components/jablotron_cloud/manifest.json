@@ -8,7 +8,7 @@
   "homekit": {},
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Pigotka/ha-cc-jablotron-cloud/issues",
-  "requirements": ["jablotronpy==0.4.3"],
+  "requirements": ["jablotronpy==0.4.2"],
   "ssdp": [],  
   "version": "0.3.0",
   "zeroconf": []
