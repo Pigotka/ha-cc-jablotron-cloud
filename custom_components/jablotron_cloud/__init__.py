@@ -82,41 +82,68 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
-        try:
-            # Note: asyncio.TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
-            async with async_timeout.timeout(10):
-                is_first_update: bool = self.session_id is None
-                if is_first_update:
-                    self.session_id = await self.hass.async_add_executor_job(
-                        self.bridge.get_session_id
-                    )
+        
+        # Note: asyncio.TimeoutError and aiohttp.ClientError are already
+        # handled by the data update coordinator.
+        async with async_timeout.timeout(10):
+            is_first_update: bool = self.session_id is None
+            if is_first_update:
+                self.session_id = await self.hass.async_add_executor_job(
+                    self.bridge.get_session_id
+                )
+                _LOGGER.debug("Opened new session: %s", str(self.session_id))
 
-                data = {}
+            data = {}
+
+            try:
                 services = await self.hass.async_add_executor_job(
                     self.bridge.get_services
                 )
-                for service in services:
-                    service_id = service[SERVICE_ID]
-                    service_type = service[SERVICE_TYPE]
+            except UnexpectedResponse:
+                _LOGGER.warning("Failed to get services!")
+                self.session_id = None
+
+            if not services:
+                _LOGGER.info("No services discovered for this jablotron account. No entities will be generated.")
+                return data
+
+            for service in services:
+                service_id = service[SERVICE_ID]
+                service_type = service[SERVICE_TYPE]
+                
+                try:
                     gates = await self.hass.async_add_executor_job(
                         self.bridge.get_programmable_gates, service_id, service_type
                     )
-
+                except UnexpectedResponse:
+                    _LOGGER.debug("There was a problem receiving programmable gates for %s", service_id)
+                    gates = {}
+            
+                try:
                     sections = await self.hass.async_add_executor_job(
                         self.bridge.get_sections, service_id, service_type
                     )
+                except UnexpectedResponse:
+                    _LOGGER.debug("There was a problem receiving sections for %s", service_id)
+                    sections = {}
 
+                try:
                     thermo_devices = await self.hass.async_add_executor_job(
                         self.bridge.get_thermo_devices, service_id, service_type
                     )
-                    data[service_id] = {}
-                    data[service_id]["service"] = service
-                    data[service_id]["gates"] = gates
-                    data[service_id]["sections"] = sections
-                    data[service_id]["thermo"] = thermo_devices
-                    _LOGGER.debug("Thermo data: %s", str(thermo_devices))
+                except UnexpectedResponse:
+                    _LOGGER.debug("There was a problem receiving thermo devices for %s", service_id)
+                    thermo_devices = {}
 
-                return data
-        except UnexpectedResponse:
-            self.session_id = None
+                
+                data[service_id] = {}
+                data[service_id]["service"] = service
+                data[service_id]["gates"] = gates
+                data[service_id]["sections"] = sections
+                data[service_id]["thermo"] = thermo_devices
+
+                if is_first_update:
+                    _LOGGER.debug("Service %d discovered. Data: %s", service_id, str(data[service_id]))
+
+            return data
+

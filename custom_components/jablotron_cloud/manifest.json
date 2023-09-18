@@ -10,6 +10,6 @@
   "issue_tracker": "https://github.com/Pigotka/ha-cc-jablotron-cloud/issues",
   "requirements": ["jablotronpy==0.5.0"],
   "ssdp": [],  
-  "version": "0.3.0",
+  "version": "0.5.0",
   "zeroconf": []
 }
