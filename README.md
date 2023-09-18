@@ -64,6 +64,7 @@ To configure integration please fill credentials you use to access your MyJablot
 1. Data are updated only every 30s
 2. Arming and disarming has no delay to leave the house.
 3. First entity get it's real state ony after 30s. Then it works like any other entity.
+4. Integration does not listen for active alarms
 
 ## Missing functionality - will be added
 
