@@ -1,0 +1,21 @@
+{
+    "config": {
+        "abort": {
+            "already_configured": "Zariadenie je už nakonfigurované"
+        },
+        "error": {
+            "cannot_connect": "Nie je možné sa pripojiť",
+            "invalid_auth": "Nesprávne prihlasovacie údaje",
+            "unknown": "Neočakávaná chyba"
+        },
+        "step": {
+            "user": {
+                "data": {
+                    "pin": "PIN",
+                    "password": "Heslo",
+                    "username": "Prihlasovacie meno"
+                }
+            }
+        }
+    }
+}
