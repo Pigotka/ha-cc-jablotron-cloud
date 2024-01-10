@@ -102,6 +102,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             except UnexpectedResponse:
                 _LOGGER.warning("Failed to get services!")
                 self.session_id = None
+                return data
 
             if not services:
                 _LOGGER.info("No services discovered for this jablotron account. No entities will be generated.")
