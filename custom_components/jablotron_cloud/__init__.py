@@ -85,7 +85,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
-        async with async_timeout.timeout(15):
+        async with async_timeout.timeout(45):
             is_first_update: bool = self.session_id is None
             if is_first_update:
                 self.session_id = await self.hass.async_add_executor_job(
