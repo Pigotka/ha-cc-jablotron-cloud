@@ -94,6 +94,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Opened new session: %s", str(self.session_id))
 
             data = {}
+            services = None
 
             try:
                 services = await self.hass.async_add_executor_job(
