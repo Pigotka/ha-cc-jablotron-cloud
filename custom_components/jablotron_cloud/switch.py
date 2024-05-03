@@ -103,7 +103,7 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
         _LOGGER.debug("Turning on gate: %s with pin: %s", self._gate_id, self._pin)
         bridge.control_programmable_gate(self._service_id, self._gate_id, True)
         self._attr_is_on = True  # assume state
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
@@ -112,7 +112,7 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
         _LOGGER.debug("Turning off gate: %s with pin: %s", self._gate_id, self._pin)
         bridge.control_programmable_gate(self._service_id, self._gate_id, False)
         self._attr_is_on = False  # assume state
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
