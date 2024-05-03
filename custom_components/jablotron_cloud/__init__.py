@@ -23,6 +23,7 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
+ASYNC_TIMEOUT = 120
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Jablotron Cloud from a config entry."""
@@ -74,7 +75,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(seconds=30),
         )
         self.bridge = bridge
-        self.session_id = None
+        self.is_first_update = True
 
     async def _async_update_data(self):
         """Fetch data from API endpoint.
@@ -82,27 +83,17 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         This is the place to pre-process the data to lookup tables
         so entities can quickly look up their data.
         """
-        
+        data = {}
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
-        async with async_timeout.timeout(45):
-            is_first_update: bool = self.session_id is None
-            if is_first_update:
-                self.session_id = await self.hass.async_add_executor_job(
-                    self.bridge.get_session_id
-                )
-                _LOGGER.debug("Opened new session: %s", str(self.session_id))
-
-            data = {}
+        async with async_timeout.timeout(ASYNC_TIMEOUT):                        
             services = None
-
             try:
                 services = await self.hass.async_add_executor_job(
                     self.bridge.get_services
                 )
             except UnexpectedResponse:
                 _LOGGER.warning("Failed to get services!")
-                self.session_id = None
                 return data
 
             if not services:
@@ -144,8 +135,9 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 data[service_id]["sections"] = sections
                 data[service_id]["thermo"] = thermo_devices
 
-                if is_first_update:
+                if self.is_first_update:                    
                     _LOGGER.debug("Service %d discovered. Data: %s", service_id, str(data[service_id]))
 
+            self.is_first_update = False
             return data
 
