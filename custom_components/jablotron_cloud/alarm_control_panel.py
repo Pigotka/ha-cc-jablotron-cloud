@@ -157,7 +157,7 @@ class JablotronAlarmControlPanel(
             self._service_id, self._component_id, Actions.DISARM, self._service_type
         )
         self._attr_state = STATE_ALARM_DISARMING
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Arm section."""
@@ -167,7 +167,7 @@ class JablotronAlarmControlPanel(
             self._service_id, self._component_id, Actions.ARM, self._service_type
         )
         self._attr_state = STATE_ALARM_ARMING
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Partial arm section if allowed."""
@@ -183,7 +183,7 @@ class JablotronAlarmControlPanel(
             self._service_type,
         )
         self._attr_state = STATE_ALARM_ARMING
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     def _setup_pin(self, code: str | None) -> None:
         if self.code_arm_required:
@@ -210,4 +210,4 @@ class JablotronAlarmControlPanel(
         self._attr_state = self._actions_to_state_alarm.get(
             state["state"], STATE_ALARM_DISARMED
         )
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
