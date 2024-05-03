@@ -48,11 +48,17 @@ async def async_setup_entry(
 
         sections_data = service_data["sections"]
         if not sections_data:
-            return
+            _LOGGER.debug(
+                "Jablotron sections date are empty, skipping service: %s:%s", service_id, service["name"]
+            )
+            continue
 
         sections = sections_data["sections"]
         if not sections:
-            return
+            _LOGGER.debug(
+                "Jablotron section date are empty, skipping service: %s:%s", service_id, service["name"]
+            )            
+            continue
 
         for section in sections:
             can_control = section["can-control"]
