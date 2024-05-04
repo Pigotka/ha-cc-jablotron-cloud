@@ -117,11 +117,8 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if not self.coordinator.data:
-            _LOGGER.error("Coordinator data are empty!")
-            return
-        
-        if self._service_id not in self.coordinator.data:
+
+        if not self.coordinator.data or self._service_id not in self.coordinator.data:
             _LOGGER.error("Invalid gate data. Maybe session expired")
             return
 

@@ -10,7 +10,7 @@ from jablotronpy import Jablotron, UnexpectedResponse
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, SERVICE_ID, SERVICE_TYPE
 
@@ -76,6 +76,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         )
         self.bridge = bridge
         self.is_first_update = True
+        self.api_fail_count = 0
 
     async def _async_update_data(self):
         """Fetch data from API endpoint.
@@ -87,14 +88,30 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
         async with async_timeout.timeout(ASYNC_TIMEOUT):                        
+
+            # API is failing, try to recreate session
+            if self.api_fail_count > 0:
+                try:
+                    session_id = await self.hass.async_add_executor_job(
+                        self.bridge.get_session_id()
+                    )
+                except UnexpectedResponse as error:                    
+                     raise UpdateFailed("Unable to get session id.") from error                    
+
+                if not session_id:
+                    raise UpdateFailed("Invalid session id.") from error                    
+
+                # session is valid reset fail counter and continue
+                sele.api_fail_count = 0
+
             services = None
             try:
                 services = await self.hass.async_add_executor_job(
                     self.bridge.get_services
                 )
-            except UnexpectedResponse:
-                _LOGGER.warning("Failed to get services!")
-                return data
+            except UnexpectedResponse as error:                
+                self.api_fail_count += 1
+                raise UpdateFailed("Failed to get services!") from error
 
             if not services:
                 _LOGGER.info("No services discovered for this jablotron account. No entities will be generated.")
@@ -108,25 +125,25 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     gates = await self.hass.async_add_executor_job(
                         self.bridge.get_programmable_gates, service_id, service_type
                     )
-                except UnexpectedResponse:
-                    _LOGGER.debug("There was a problem receiving programmable gates for %s", service_id)
-                    gates = {}
+                except UnexpectedResponse as error:
+                    self.api_fail_count += 1
+                    raise UpdateFailed(f"faile to get gates data for service {service_id}") from error
             
                 try:
                     sections = await self.hass.async_add_executor_job(
                         self.bridge.get_sections, service_id, service_type
                     )
-                except UnexpectedResponse:
-                    _LOGGER.debug("There was a problem receiving sections for %s", service_id)
-                    sections = {}
+                except UnexpectedResponse as error:                    
+                    self.api_fail_count += 1
+                    raise UpdateFailed(f"faile to get section data for service {service_id}") from error                                        
 
                 try:
                     thermo_devices = await self.hass.async_add_executor_job(
                         self.bridge.get_thermo_devices, service_id, service_type
                     )
-                except UnexpectedResponse:
-                    _LOGGER.debug("There was a problem receiving thermo devices for %s", service_id)
-                    thermo_devices = {}
+                except UnexpectedResponse as error:
+                    self.api_fail_count += 1
+                    raise UpdateFailed(f"faile to get thermo data for service {service_id}") from error
 
                 
                 data[service_id] = {}
