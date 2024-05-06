@@ -93,7 +93,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             if self.api_fail_count > 0:
                 try:
                     session_id = await self.hass.async_add_executor_job(
-                        self.bridge.get_session_id()
+                        self.bridge.get_session_id
                     )
                 except UnexpectedResponse as error:                    
                      raise UpdateFailed("Unable to get session id.") from error                    
