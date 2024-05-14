@@ -71,7 +71,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name="Jablotron",
+            name="Jablotron Cloud",
             update_interval=timedelta(seconds=30),
         )
         self.bridge = bridge
@@ -96,13 +96,18 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                         self.bridge.get_session_id
                     )
                 except UnexpectedResponse as error:                    
-                     raise UpdateFailed("Unable to get session id.") from error                    
+                    _LOGGER.debug("Unable to get session id.")
+                    # recreate bridge to restart connection until it is fixed on bridge side
+                    self.bridge = Jablotron(self.bridge.username, self.bridge.password, self.bridge.pin)
+                    _LOGGER.debug("Bridge recreated.")
+                    raise UpdateFailed("Unable to get session ID. JablotronPy bridge recreated.") from error
 
                 if not session_id:
+                    _LOGGER.debug("Invalid session id.")
                     raise UpdateFailed("Invalid session id.") from error                    
 
                 # session is valid reset fail counter and continue
-                sele.api_fail_count = 0
+                self.api_fail_count = 0
 
             services = None
             try:
@@ -111,6 +116,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 )
             except UnexpectedResponse as error:                
                 self.api_fail_count += 1
+                _LOGGER.debug("Failed to get services!")
                 raise UpdateFailed("Failed to get services!") from error
 
             if not services:
@@ -127,7 +133,8 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     )
                 except UnexpectedResponse as error:
                     self.api_fail_count += 1
-                    raise UpdateFailed(f"faile to get gates data for service {service_id}") from error
+                    _LOGGER.debug(f"Failed to get gates data for service {service_id}")
+                    raise UpdateFailed(f"Failed to get gates data for service {service_id}") from error
             
                 try:
                     sections = await self.hass.async_add_executor_job(
@@ -135,7 +142,8 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     )
                 except UnexpectedResponse as error:                    
                     self.api_fail_count += 1
-                    raise UpdateFailed(f"faile to get section data for service {service_id}") from error                                        
+                    _LOGGER.debug(f"Failed to get section data for service {service_id}")
+                    raise UpdateFailed(f"Failed to get section data for service {service_id}") from error                                        
 
                 try:
                     thermo_devices = await self.hass.async_add_executor_job(
@@ -143,7 +151,8 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     )
                 except UnexpectedResponse as error:
                     self.api_fail_count += 1
-                    raise UpdateFailed(f"faile to get thermo data for service {service_id}") from error
+                    _LOGGER.debug(f"Failed to get thermo data for service {service_id}")
+                    raise UpdateFailed(f"Failed to get thermo data for service {service_id}") from error
 
                 
                 data[service_id] = {}
@@ -152,9 +161,10 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 data[service_id]["sections"] = sections
                 data[service_id]["thermo"] = thermo_devices
 
+                _LOGGER.debug("Service %d successfuly updated.", service_id)
                 if self.is_first_update:                    
                     _LOGGER.debug("Service %d discovered. Data: %s", service_id, str(data[service_id]))
 
-            self.is_first_update = False
+            self.is_first_update = False            
             return data
 

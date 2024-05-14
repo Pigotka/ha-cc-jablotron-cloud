@@ -100,7 +100,7 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
         """Turn the entity on."""
         bridge = self.coordinator.bridge
         bridge.pin_code = self._pin
-        _LOGGER.debug("Turning on gate: %s with pin: %s", self._gate_id, self._pin)
+        _LOGGER.debug("Turning on gate: %s using pin", self._gate_id)
         bridge.control_programmable_gate(self._service_id, self._gate_id, True)
         self._attr_is_on = True  # assume state
         self.schedule_update_ha_state()
@@ -109,7 +109,7 @@ class ProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
         """Turn the entity off."""
         bridge = self.coordinator.bridge
         bridge.pin_code = self._pin
-        _LOGGER.debug("Turning off gate: %s with pin: %s", self._gate_id, self._pin)
+        _LOGGER.debug("Turning off gate: %s using pin", self._gate_id)
         bridge.control_programmable_gate(self._service_id, self._gate_id, False)
         self._attr_is_on = False  # assume state
         self.schedule_update_ha_state()
