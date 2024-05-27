@@ -78,6 +78,11 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         self.is_first_update = True
         self.api_fail_count = 0
 
+    async def _recreate_bridge(self):
+        # recreate bridge to restart connection until it is fixed on bridge side
+        self.bridge = Jablotron(self.bridge.username, self.bridge.password, self.bridge.pin_code)
+        _LOGGER.debug("Bridge recreated.")
+
     async def _async_update_data(self):
         """Fetch data from API endpoint.
 
@@ -95,15 +100,14 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     session_id = await self.hass.async_add_executor_job(
                         self.bridge.get_session_id
                     )
-                except UnexpectedResponse as error:                    
+                except UnexpectedResponse as error:
                     _LOGGER.debug("Unable to get session id.")
-                    # recreate bridge to restart connection until it is fixed on bridge side
-                    self.bridge = Jablotron(self.bridge.username, self.bridge.password, self.bridge.pin_code)
-                    _LOGGER.debug("Bridge recreated.")
+                    self._recreate_bridge()
                     raise UpdateFailed("Unable to get session ID. JablotronPy bridge recreated.") from error
 
                 if not session_id:
                     _LOGGER.debug("Invalid session id.")
+                    self._recreate_bridge()
                     return
 
                 # session is valid reset fail counter and continue
@@ -114,7 +118,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 services = await self.hass.async_add_executor_job(
                     self.bridge.get_services
                 )
-            except UnexpectedResponse as error:                
+            except UnexpectedResponse as error:
                 self.api_fail_count += 1
                 _LOGGER.debug("Failed to get services!")
                 raise UpdateFailed("Failed to get services!") from error
