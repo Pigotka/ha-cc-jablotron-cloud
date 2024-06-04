@@ -102,12 +102,12 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     )
                 except UnexpectedResponse as error:
                     _LOGGER.debug("Unable to get session id.")
-                    self._recreate_bridge()
+                    await self._recreate_bridge()
                     raise UpdateFailed("Unable to get session ID. JablotronPy bridge recreated.") from error
 
                 if not session_id:
                     _LOGGER.debug("Invalid session id.")
-                    self._recreate_bridge()
+                    await self._recreate_bridge()
                     return
 
                 # session is valid reset fail counter and continue
