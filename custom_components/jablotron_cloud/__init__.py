@@ -81,7 +81,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
     async def _recreate_bridge(self):
         # recreate bridge to restart connection until it is fixed on bridge side
         self.bridge = Jablotron(self.bridge.username, self.bridge.password, self.bridge.pin_code)
-        _LOGGER.debug("Bridge recreated.")
+        _LOGGER.warning("Bridge recreated.")
 
     async def _async_update_data(self):
         """Fetch data from API endpoint.
