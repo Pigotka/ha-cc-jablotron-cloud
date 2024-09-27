@@ -131,7 +131,9 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 service_id = service[SERVICE_ID]
                 service_type = service[SERVICE_TYPE]
 
+                _LOGGER.debug("Loading data for service %d", service_id)
                 if service_type == 'LOGBOOK':
+                    _LOGGER.debug("Service type %s not supported. Skipping service %d", service_type, service_id)
                     continue
                 
                 try:
