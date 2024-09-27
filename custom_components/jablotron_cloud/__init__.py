@@ -130,6 +130,9 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             for service in services:
                 service_id = service[SERVICE_ID]
                 service_type = service[SERVICE_TYPE]
+
+                if service_type == 'LOGBOOK':
+                    continue
                 
                 try:
                     gates = await self.hass.async_add_executor_job(
