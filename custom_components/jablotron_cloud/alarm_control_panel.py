@@ -170,7 +170,7 @@ class JablotronAlarmControlPanel(
         self._setup_pin(code)
 
         self.coordinator.bridge.control_component(
-            self._service_id, self._component_id, Actions.ARM, self._service_type
+            self._service_id, self._component_id, Actions.ARM, self._service_type, force=True
         )
         self._attr_state = STATE_ALARM_ARMING
         self.schedule_update_ha_state()
@@ -187,6 +187,7 @@ class JablotronAlarmControlPanel(
             self._component_id,
             Actions.PARTIAL_ARM,
             self._service_type,
+            force=True
         )
         self._attr_state = STATE_ALARM_ARMING
         self.schedule_update_ha_state()
