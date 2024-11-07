@@ -6,16 +6,9 @@ import logging
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-    CodeFormat,
+    CodeFormat, AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -57,7 +50,7 @@ async def async_setup_entry(
         if not sections:
             _LOGGER.debug(
                 "Jablotron section date are empty, skipping service: %s:%s", service_id, service["name"]
-            )            
+            )
             continue
 
         for section in sections:
@@ -91,14 +84,14 @@ class JablotronAlarmControlPanel(
     CoordinatorEntity[JablotronDataCoordinator],
     AlarmControlPanelEntity,
 ):
-    """Representation of an Jablotron cloud based alarm panel."""
+    """Representation of a Jablotron cloud based alarm panel."""
 
     _attr_has_entity_name = True
 
     _actions_to_state_alarm = {
-        Actions.ARM: STATE_ALARM_ARMED_AWAY,
-        Actions.DISARM: STATE_ALARM_DISARMED,
-        Actions.PARTIAL_ARM: STATE_ALARM_ARMED_HOME,
+        Actions.ARM: AlarmControlPanelState.ARMED_AWAY,
+        Actions.DISARM: AlarmControlPanelState.DISARMED,
+        Actions.PARTIAL_ARM: AlarmControlPanelState.ARMED_HOME,
     }
 
     def __init__(
@@ -162,7 +155,7 @@ class JablotronAlarmControlPanel(
         self.coordinator.bridge.control_component(
             self._service_id, self._component_id, Actions.DISARM, self._service_type
         )
-        self._attr_state = STATE_ALARM_DISARMING
+        self._attr_alarm_state = AlarmControlPanelState.DISARMING
         self.schedule_update_ha_state()
 
     def alarm_arm_away(self, code: str | None = None) -> None:
@@ -172,7 +165,7 @@ class JablotronAlarmControlPanel(
         self.coordinator.bridge.control_component(
             self._service_id, self._component_id, Actions.ARM, self._service_type, force=True
         )
-        self._attr_state = STATE_ALARM_ARMING
+        self._attr_alarm_state = AlarmControlPanelState.ARMING
         self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code: str | None = None) -> None:
@@ -189,7 +182,7 @@ class JablotronAlarmControlPanel(
             self._service_type,
             force=True
         )
-        self._attr_state = STATE_ALARM_ARMING
+        self._attr_alarm_state = AlarmControlPanelState.ARMING
         self.schedule_update_ha_state()
 
     def _setup_pin(self, code: str | None) -> None:
@@ -214,7 +207,7 @@ class JablotronAlarmControlPanel(
 
         state = next(filter(lambda data: data[COMP_ID] == self._component_id, states))
         _LOGGER.debug("Updating section state: %s", str(state))
-        self._attr_state = self._actions_to_state_alarm.get(
-            state["state"], STATE_ALARM_DISARMED
+        self._attr_alarm_state = self._actions_to_state_alarm.get(
+            state["state"], AlarmControlPanelState.DISARMED
         )
         self.schedule_update_ha_state()

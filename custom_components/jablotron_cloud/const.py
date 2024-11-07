@@ -1,6 +1,6 @@
 """Constants for the Jablotron Cloud integration."""
 
-from homeassistant.backports.enum import StrEnum
+from enum import StrEnum
 
 DOMAIN = "jablotron_cloud"
 
