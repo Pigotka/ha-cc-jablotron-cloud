@@ -117,8 +117,7 @@ class JablotronAlarmControlPanel(
         self._can_partial_arm = partial_arm_enabled
         self._need_authorization = need_authorization
         self._attr_unique_id = f"{service_id} {component_id}"
-        self._attr_name = friendly_name
-        self._default_pin = coordinator.bridge.pin_code
+        self._attr_name = friendly_name        
         self._service_type = self.coordinator.data[service_id]["service"][SERVICE_TYPE]
 
     @property
@@ -129,7 +128,7 @@ class JablotronAlarmControlPanel(
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return bool(self._need_authorization and not self._default_pin)
+        return self._need_authorization
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
@@ -193,11 +192,7 @@ class JablotronAlarmControlPanel(
         self.schedule_update_ha_state()
 
     def _setup_pin(self, code: str | None) -> None:
-        if self.code_arm_required:
-            pin = code if code is not None else self._default_pin
-            self.coordinator.bridge.pin_code = pin
-        else:
-            self.coordinator.bridge.pin_code = self._default_pin
+        self.coordinator.bridge.pin_code = self.code_or_default_code(code)
 
     @callback
     def _handle_coordinator_update(self) -> None:

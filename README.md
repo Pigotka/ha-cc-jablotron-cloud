@@ -52,12 +52,12 @@ To configure integration please fill credentials you use to access your MyJablot
 | ---------------- | ----------------------------------- |
 | `username` | Email associated with Jablotron cloud.   |
 | `password` | Password use to login into the webpage. |
-| `pin` | Default pin to controll PG's. User pin can be entered for every section later but at least one pin is required. |
 
 ## Supported functionality
 
 1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal any state you like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only partially. It can also tell you state of you garage door or window contact sensors. Most of PG's can be controlled to trigger some Jablotron action.
 2. Sections - every section is individual alarm control panel as it requires PIN codes to control it and can be ARMED (Armed Away) or PARTIALLY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
+3. Default pin code - it can be configured in alarm entity options. Once configured code will become optional parameter for arm service.
 
 ## Known issues
 

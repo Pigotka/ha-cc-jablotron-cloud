@@ -8,7 +8,7 @@ import async_timeout
 from jablotronpy import Jablotron, UnexpectedResponse
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME, Platform
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -29,12 +29,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Jablotron Cloud from a config entry."""
 
     username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    pin = entry.data[CONF_PIN]
+    password = entry.data[CONF_PASSWORD]    
 
     _LOGGER.debug("Preparing Jablotron data update coordinator")
 
-    bridge = Jablotron(username, password, pin)
+    bridge = Jablotron(username, password, "")
     coordinator = JablotronDataCoordinator(hass, bridge)
 
     await coordinator.async_config_entry_first_refresh()

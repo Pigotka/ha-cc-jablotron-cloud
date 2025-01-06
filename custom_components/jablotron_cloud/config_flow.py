@@ -8,7 +8,7 @@ from jablotronpy import Jablotron, UnexpectedResponse
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_PIN, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult
 from homeassistant.exceptions import HomeAssistantError
@@ -21,7 +21,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_PIN): str,
     }
 )
 
@@ -29,7 +28,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect."""
 
-    hub = Jablotron(data[CONF_USERNAME], data[CONF_PASSWORD], data[CONF_PIN])
+    hub = Jablotron(data[CONF_USERNAME], data[CONF_PASSWORD], "")
     try:
         await hass.async_add_executor_job(hub.get_session_id)
     except UnexpectedResponse as ex:
