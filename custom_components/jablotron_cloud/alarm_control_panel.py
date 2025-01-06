@@ -129,7 +129,7 @@ class JablotronAlarmControlPanel(
     @property
     def code_arm_required(self) -> bool:
         """Whether the code is required for arm actions."""
-        return self._need_authorization
+        return bool(self._need_authorization and not self._default_pin)
 
     @property
     def supported_features(self) -> AlarmControlPanelEntityFeature:
