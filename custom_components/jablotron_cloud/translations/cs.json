@@ -1,19 +1,19 @@
 {
     "config": {
         "abort": {
-            "already_configured": "Zařízení je už nakonfigurované"
+            "already_configured": "Zařízení je již nakonfigurováno"
         },
         "error": {
             "cannot_connect": "Není možné se připojit",
             "invalid_auth": "Nesprávné přihlašovací údaje",
-            "unknown": "Neočakávaná chyba"
+            "unknown": "Neočekávaná chyba"
         },
         "step": {
             "user": {
                 "data": {
                     "pin": "PIN",
                     "password": "Heslo",
-                    "username": "Přihlašovací jméno"
+                    "username": "Uživatelské jméno"
                 }
             }
         }

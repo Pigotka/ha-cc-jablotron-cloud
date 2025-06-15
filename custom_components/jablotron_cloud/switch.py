@@ -36,7 +36,7 @@ async def async_setup_entry(
         if not gates_data:
             continue
 
-        gates = gates_data["programmableGates"]
+        gates = gates_data.get("programmableGates", [])
         for gate in gates:
             can_control = gate["can-control"]
             if not can_control:
