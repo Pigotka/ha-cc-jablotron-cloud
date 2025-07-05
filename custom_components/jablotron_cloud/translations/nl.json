@@ -1,21 +1,49 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Apparaat is al geconfigureerd"
-        },
-        "error": {
-            "cannot_connect": "Kan geen verbinding maken",
-            "invalid_auth": "Ongeldige authenticatie",
-            "unknown": "Onverwachte fout"
-        },
         "step": {
             "user": {
                 "data": {
-                    "pin": "PIN",
+                    "username": "Gebruikersnaam",
                     "password": "Wachtwoord",
-                    "username": "Gebruikersnaam"
+                    "pin": "PIN (voor PG's)",
+                    "force_update": "Bypass section errors",
+                    "scan_interval": "Update-interval (seconden)",
+                    "timeout": "Update-time-out (seconden)"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord",
+                    "pin": "PIN (voor PG's)",
+                    "force_update": "Bypass section errors",
+                    "scan_interval": "Update-interval (seconden)",
+                    "timeout": "Update-time-out (seconden)"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Gebruikersnaam",
+                    "password": "Wachtwoord",
+                    "pin": "PIN (voor PG's)",
+                    "force_update": "Bypass section errors",
+                    "scan_interval": "Update-interval (seconden)",
+                    "timeout": "Update-time-out (seconden)"
                 }
             }
+        },
+        "error": {
+            "invalid_auth": "Onjuiste inloggegevens voor Jablotron Cloud!"
+        },
+        "abort": {
+            "already_configured": "Het apparaat is al geconfigureerd!",
+            "reconfigure_successful": "Het apparaat is succesvol opnieuw geconfigureerd.",
+            "reauth_successful": "De aanmelding bij Jablotron Cloud is succesvol hersteld."
+        }
+    },
+    "exceptions": {
+        "invalid_pin": {
+            "message": "De ingevoerde pincode is niet geldig!"
         }
     }
 }

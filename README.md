@@ -6,24 +6,24 @@
 
 ![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/logo.png)
 
-
 # Jablotron Cloud
 
-HACS custom component for jablotron cloud integration
-
+HACS custom component for Jablotron cloud integration
 
 ## About
 
-Integration works with MyJablotron web service available on https://www.jablonet.net/. It uses mobile API provided by [JablotronPy](https://github.com/fdegier/JablotronPy) library. It does not have full capabilities of web interface and some function are not yet supported by the integration. See the list of supported function below.
+Integration works with MyJablotron web service available on https://www.jablonet.net/. It uses mobile API provided
+by [JablotronPy](https://github.com/fdegier/JablotronPy) library. It does not have full capabilities of web interface
+and some function are not yet supported by the integration. See the list of supported function below.
 
 **This component will set up the following platforms.**
 
-| Platform         | Description                         |
-| ---------------- | ----------------------------------- |
-| `binary_sensor`| To show uncontrollable programmable gates (PG) .   |
-| `switch`| To controll programmable gates (PG) .   |
-| `alarm_control_panel`| To enable ARM/DISARM on individual sections. |
-| `sensor`| To support temperature and electricity sensors. |
+| Platform              | Description                                     |
+|-----------------------|-------------------------------------------------|
+| `binary_sensor`       | To show uncontrollable programmable gates (PGs) |
+| `switch`              | To control programmable gates (PGs)             |
+| `alarm_control_panel` | To enable ARM/DISARM on individual sections     |
+| `sensor`              | To support temperature and electricity sensors  |
 
 ## HACS Installation
 
@@ -46,18 +46,24 @@ Integration works with MyJablotron web service available on https://www.jablonet
 
 To configure integration please fill credentials you use to access your MyJablotron web page or mobile app.
 
-**Following fields needs to be filled:**
+**The configuration consists of the following parameters:**
 
-| Field         | Description                         |
-| ---------------- | ----------------------------------- |
-| `username` | Email associated with Jablotron cloud.   |
-| `password` | Password use to login into the webpage. |
+| Field      | Description                                         |
+|------------|-----------------------------------------------------|
+| `username` | Email associated with Jablotron Cloud account       |
+| `password` | Password for Jablotron Cloud account                |
+| `pin`      | Default pin used **ONLY** to control PGs (optional) |
 
 ## Supported functionality
 
-1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal any state you like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only partially. It can also tell you state of you garage door or window contact sensors. Most of PG's can be controlled to trigger some Jablotron action.
-2. Sections - every section is individual alarm control panel as it requires PIN codes to control it and can be ARMED (Armed Away) or PARTIALLY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
-3. Default pin code - it can be configured in alarm entity options. Once configured code will become optional parameter for arm service.
+1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal any state you
+   like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only
+   partially. It can also tell you state of you garage door or window contact sensors. Most of PG's can be controlled to
+   trigger some Jablotron action.
+2. Sections - every section is individual alarm control panel as it requires PIN codes to control it and can be ARMED (
+   Armed Away) or PARTIALLY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
+3. Default pin code - it can be configured in alarm entity options. Once configured code will become optional parameter
+   for arm service.
 
 ## Known issues
 
