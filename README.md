@@ -1,83 +1,75 @@
-![Home_Assistant](https://img.shields.io/badge/Home-Assistant-blue)
-[![hacs_badge](https://img.shields.io/badge/HACS-Custom-41BDF5.svg)](https://github.com/hacs/integration)
-![GitHub](https://img.shields.io/github/license/viktak/ha-cc-openweathermap_all)
+![Home Assistant](https://img.shields.io/badge/Home-Assistant-blue?style=for-the-badge)
+![HACS](https://img.shields.io/badge/HACS-Integration-blue?style=for-the-badge)
+![GitHub license](https://img.shields.io/github/license/Pigotka/ha-cc-jablotron-cloud?style=for-the-badge)
 
-[![buy me a coffee](https://img.shields.io/badge/If%20you%20like%20it-Buy%20us%20a%20coffee-green.svg?style=for-the-badge)](https://www.buymeacoffee.com/michalbartP)
+[![Buy me a coffee](https://img.shields.io/badge/buy_me_a_coffee-orange?style=for-the-badge&logo=buy-me-a-coffee&logoColor=white)](https://www.buymeacoffee.com/michalbartP)
+
+---
 
 ![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/logo.png)
 
 # Jablotron Cloud
 
-HACS custom component for Jablotron cloud integration
+Home Assistant custom component for Jablotron Cloud.
 
 ## About
 
-Integration works with MyJablotron web service available on https://www.jablonet.net/. It uses mobile API provided
-by [JablotronPy](https://github.com/fdegier/JablotronPy) library. It does not have full capabilities of web interface
-and some function are not yet supported by the integration. See the list of supported function below.
+This integration allows you to monitor and control alarm sections as well as programmable gates and temperature sensors.
+It does not require a direct connection to the alarm control panel to run, instead it uses a cloud connection via
+MyJablotron and takes advantage of the mobile API provided by the [JablotronPy](https://github.com/fdegier/JablotronPy)
+library.
 
-**This component will set up the following platforms.**
+## Supported entities
 
-| Platform              | Description                                     |
-|-----------------------|-------------------------------------------------|
-| `binary_sensor`       | To show uncontrollable programmable gates (PGs) |
-| `switch`              | To control programmable gates (PGs)             |
-| `alarm_control_panel` | To enable ARM/DISARM on individual sections     |
-| `sensor`              | To support temperature and electricity sensors  |
+The integration uses the following entities to enable monitoring and control of individual components of the Jablotron
+ecosystem:
+
+| Entity type           | Description                                                     |
+|-----------------------|-----------------------------------------------------------------|
+| `alarm_control_panel` | Used for monitoring and controlling alarm sections              |
+| `binary_sensor`       | Used for monitoring **UN**controllable programmable gates (PGs) |
+| `switch`              | Used for controlling programmable gates (PGs)                   |
+| `sensor`              | Used for monitoring temperature sensors                         |
 
 ## HACS Installation
 
-1. Add repository using "+Explore & download repositories" button in HACS inside integrations section
-2. Search for Jablotron Cloud in HACS
-3. Install
-4. In HA add new integration and select Jablotron Cloud.
+This integration can be installed using HACS, this can be achieved as follows:
+
+1. Install and open HACS in Home Assistant
+2. Search for `Jablotron Cloud`
+3. Open it and click on `Download` button
+4. In Home Assistant go to Integrations
+5. Click on `Add integration` button
+6. Search for `Jablotron Cloud`
+7. Complete configuration and confirm
 
 ## Manual Installation
 
-1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
-2. If you do not have a `custom_components` directory (folder) there, you need to create it.
-3. In the `custom_components` directory (folder) create a new folder called `jablotron_cloud`.
-4. Download _all_ the files from the `custom_components/jablotron_cloud/` directory (folder) in this repository.
-5. Place the files you downloaded in the new directory (folder) you created.
+If you are not using HACS, you can install this integration manually as follows:
+
+1. Open Home Assistant installation configuration directory (you should see `configuration.yaml` file)
+2. Create `custom_components` folder, or skip this step if already exists
+3. Open `custom_components` folder
+4. Download `custom_components/jablotron_cloud` folder from this repository
+5. Place downloaded `jablotron_cloud` folder to created `custom_components` folder
 6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Jablotron Cloud"
+7. In Home Assistant go to Integrations
+8. Click on `Add integration` button
+9. Search for `Jablotron Cloud`
+10. Complete configuration and confirm
 
-## Configuration is done in the UI
+## Integration configuration
 
-To configure integration please fill credentials you use to access your MyJablotron web page or mobile app.
+To successfully set up this integration, you will need the username (email) and password used for the MyJablotron web
+service/mobile app.
 
-**The configuration consists of the following parameters:**
+The integration allows you to modify the following parameters:
 
-| Field      | Description                                         |
-|------------|-----------------------------------------------------|
-| `username` | Email associated with Jablotron Cloud account       |
-| `password` | Password for Jablotron Cloud account                |
-| `pin`      | Default pin used **ONLY** to control PGs (optional) |
+* Default pin used to control PGs
+* Whether to bypass section errors by default when arming sections
+* Frequency of polling data from Jablotron Cloud
+* Timeout for polling data from Jablotron Cloud
 
-## Supported functionality
+## Missing functionality
 
-1. Programmable gates - show status of every programmable gate in your system. PG can be created to signal any state you
-   like by your Jablotron provider. It can indicate you for example that section is armed or that it is armed only
-   partially. It can also tell you state of you garage door or window contact sensors. Most of PG's can be controlled to
-   trigger some Jablotron action.
-2. Sections - every section is individual alarm control panel as it requires PIN codes to control it and can be ARMED (
-   Armed Away) or PARTIALLY ARMED (Armed Home). Section also support friendly names defined in you cloud installation.
-3. Default pin code - it can be configured in alarm entity options. Once configured code will become optional parameter
-   for arm service.
-
-## Known issues
-
-1. Data are updated only every 30s
-2. Arming and disarming has no delay to leave the house.
-3. First entity get it's real state ony after 30s. Then it works like any other entity.
-4. Integration does not listen for active alarms
-5. Arming is always with FORCE param overriding any periphery error. This should be converted into user option.
-
-## Missing functionality - will be added
-
-1. Impulse counters
-2. Alarm event detection
-
-# Support
-
-![Jablotron logo](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/bmc_qr.png)
+* Integration does not listen for active alarms **- this is limitation of Jablotron Cloud API**
