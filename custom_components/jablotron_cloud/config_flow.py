@@ -15,23 +15,17 @@ from .jablotron import JablotronClient
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_schema(
-    username: str = "",
-    pin: str = "",
-    force_arm: bool = True,
-    scan_interval: int = 30,
-    scan_timeout: int = 15
-) -> vol.Schema:
+def get_schema(config: dict) -> vol.Schema:
     """Return config flow schema."""
 
     return vol.Schema(
         {
-            vol.Required(CONF_USERNAME, default=username): str,
+            vol.Required(CONF_USERNAME, default=config.get(CONF_USERNAME, "")): str,
             vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_PIN, default=pin): str,
-            vol.Optional(CONF_FORCE_UPDATE, default=force_arm): bool,
-            vol.Optional(CONF_SCAN_INTERVAL, default=scan_interval): int,
-            vol.Optional(CONF_TIMEOUT, default=scan_timeout): int
+            vol.Optional(CONF_PIN, default=config.get(CONF_PIN, "")): str,
+            vol.Optional(CONF_FORCE_UPDATE, default=config.get(CONF_FORCE_UPDATE, True)): bool,
+            vol.Optional(CONF_SCAN_INTERVAL, default=config.get(CONF_SCAN_INTERVAL, 30)): int,
+            vol.Optional(CONF_TIMEOUT, default=config.get(CONF_TIMEOUT, 15)): int
         }
     )
 
@@ -56,7 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         # Open configuration dialog
         if user_input is None:
-            return self.async_show_form(data_schema=get_schema())
+            return self.async_show_form(data_schema=get_schema({}))
 
         try:
             # Validate entered credentials and reopen dialog if they are not valid
@@ -64,13 +58,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(validate_credentials, user_input)
         except UnauthorizedException:
             return self.async_show_form(
-                data_schema=get_schema(
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PIN],
-                    user_input[CONF_FORCE_UPDATE],
-                    user_input[CONF_SCAN_INTERVAL],
-                    user_input[CONF_TIMEOUT]
-                ),
+                data_schema=get_schema(user_input),
                 errors={"base": "invalid_auth"}
             )
         else:
@@ -86,15 +74,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Open reconfiguration dialog
         # noinspection DuplicatedCode
         if user_input is None:
-            return self.async_show_form(
-                data_schema=get_schema(
-                    config_entry.data[CONF_USERNAME],
-                    config_entry.data[CONF_PIN],
-                    config_entry.data[CONF_FORCE_UPDATE],
-                    config_entry.data[CONF_SCAN_INTERVAL],
-                    config_entry.data[CONF_TIMEOUT]
-                )
-            )
+            return self.async_show_form(data_schema=get_schema(config_entry.data))
 
         try:
             # Validate entered credentials and reopen dialog if they are not valid
@@ -102,13 +82,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.hass.async_add_executor_job(validate_credentials, user_input)
         except UnauthorizedException:
             return self.async_show_form(
-                data_schema=get_schema(
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PIN],
-                    user_input[CONF_FORCE_UPDATE],
-                    user_input[CONF_SCAN_INTERVAL],
-                    user_input[CONF_TIMEOUT]
-                ),
+                data_schema=get_schema(user_input),
                 errors={"base": "invalid_auth"}
             )
         else:
@@ -135,13 +109,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=get_schema(
-                    config_entry.data[CONF_USERNAME],
-                    config_entry.data[CONF_PIN],
-                    config_entry.data[CONF_FORCE_UPDATE],
-                    config_entry.data[CONF_SCAN_INTERVAL],
-                    config_entry.data[CONF_TIMEOUT]
-                )
+                data_schema=get_schema(config_entry.data)
             )
 
         try:
@@ -151,13 +119,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         except UnauthorizedException:
             return self.async_show_form(
                 step_id="reauth_confirm",
-                data_schema=get_schema(
-                    user_input[CONF_USERNAME],
-                    user_input[CONF_PIN],
-                    user_input[CONF_FORCE_UPDATE],
-                    user_input[CONF_SCAN_INTERVAL],
-                    user_input[CONF_TIMEOUT]
-                ),
+                data_schema=get_schema(user_input),
                 errors={"base": "invalid_auth"}
             )
         else:
