@@ -12,12 +12,14 @@ from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PIN, CONF_FOR
     CONF_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from jablotronpy import Jablotron, UnauthorizedException
 
 from .const import PLATFORMS, UNSUPPORTED_SERVICES
 from .jablotron import JablotronClient
 from .types import JablotronServiceData
+from .utils import update_unique_id
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,12 +81,16 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: JablotronConfig
 
     # Modify config entry based on previous version
     _LOGGER.debug("Migrating configuration from version %s.%s", version, minor_version)
-    new_data = config_entry.data.copy()
+    new_data: dict = config_entry.data.copy()
     if version == 2:
         # Add default values for 'force_update', 'scan_interval' and 'timeout'
+        new_data[CONF_PIN] = config_entry.data.get(CONF_PIN, "")
         new_data[CONF_FORCE_UPDATE] = True
         new_data[CONF_SCAN_INTERVAL] = 30
         new_data[CONF_TIMEOUT] = 15
+
+        # Migrate existing entities to the new schema
+        await async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
     # Set config entry version to the latest one
     hass.config_entries.async_update_entry(config_entry, data=new_data, minor_version=1, version=3)

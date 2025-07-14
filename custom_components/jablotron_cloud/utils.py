@@ -1,10 +1,31 @@
 """Utils for Jablotron Cloud integration."""
 
+import logging
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.const import STATE_UNKNOWN
+from homeassistant.core import callback
+from homeassistant.helpers.entity_registry import RegistryEntry
 from jablotronpy import JablotronSectionsState, JablotronProgrammableGatesState
 
 from .const import SECTION_STATE_AS_ALARM_STATE, PG_STATE_AS_BINARY_STATE
+
+_LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def update_unique_id(entity_entry: RegistryEntry) -> dict | None:
+    """Migrate unique id of existing entities to the new schema."""
+
+    # Check whether unique id contains space
+    if " " in entity_entry.unique_id:
+        _LOGGER.info("Migrating entity '%s' to the new unique id schema", entity_entry.entity_id)
+
+        return {
+            "new_unique_id": entity_entry.unique_id.replace(" ", "_")
+        }
+
+    return None
 
 
 def get_component_state(
