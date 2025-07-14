@@ -8,8 +8,14 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PIN, CONF_FORCE_UPDATE, CONF_SCAN_INTERVAL, \
+from homeassistant.const import (
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_FORCE_UPDATE,
+    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_registry import async_migrate_entries

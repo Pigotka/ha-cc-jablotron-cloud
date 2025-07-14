@@ -5,8 +5,14 @@ import logging
 import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_USERNAME, CONF_PASSWORD, CONF_PIN, CONF_FORCE_UPDATE, CONF_SCAN_INTERVAL, \
+from homeassistant.const import (
+    CONF_USERNAME,
+    CONF_PASSWORD,
+    CONF_PIN,
+    CONF_FORCE_UPDATE,
+    CONF_SCAN_INTERVAL,
     CONF_TIMEOUT
+)
 from jablotronpy import UnauthorizedException
 
 from .const import DOMAIN
