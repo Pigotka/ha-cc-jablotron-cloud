@@ -33,6 +33,8 @@
             }
         },
         "error": {
+            "interval_too_short": "De minimale interval voor het vernieuwen van gegevens is 20 seconden!",
+            "timeout_too_low": "De minimale time-out voor het vernieuwen van gegevens is 10 seconden!",
             "invalid_auth": "Onjuiste inloggegevens voor Jablotron Cloud!"
         },
         "abort": {
