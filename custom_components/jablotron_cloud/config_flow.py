@@ -52,7 +52,7 @@ async def handle_configuration(
         )
 
     # Validate interval value
-    if user_input[CONF_SCAN_INTERVAL] < 20:
+    if user_input[CONF_SCAN_INTERVAL] < 30:
         return self.async_show_form(  # type: ignore
             step_id=step_id,
             data_schema=get_schema(user_input),

@@ -33,7 +33,7 @@
             }
         },
         "error": {
-            "interval_too_short": "Minimálny interval aktualizácie dát je 20 sekúnd!",
+            "interval_too_short": "Minimálny interval aktualizácie dát je 30 sekúnd!",
             "timeout_too_low": "Minimálny časový limit na obnovenie dát je 10 sekúnd!",
             "invalid_auth": "Nesprávne prihlasovacie údaje pre Jablotron Cloud!"
         },

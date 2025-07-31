@@ -33,7 +33,7 @@
             }
         },
         "error": {
-            "interval_too_short": "Minimum data refresh interval is 20 seconds!",
+            "interval_too_short": "Minimum data refresh interval is 30 seconds!",
             "timeout_too_low": "Minimum data refresh timeout is 10 seconds!",
             "invalid_auth": "Incorrect login details for Jablotron Cloud!"
         },
