@@ -1,15 +1,19 @@
 {
-  "domain": "jablotron_cloud",
-  "name": "Jablotron Cloud",
-  "codeowners": ["@pigotka"],
-  "config_flow": true,    
-  "dependencies": [],
-  "documentation": "https://github.com/Pigotka/ha-cc-jablotron-cloud",  
-  "homekit": {},
-  "iot_class": "cloud_polling",
-  "issue_tracker": "https://github.com/Pigotka/ha-cc-jablotron-cloud/issues",
-  "requirements": ["jablotronpy==0.6.4"],
-  "ssdp": [],  
-  "version": "0.6.8",
-  "zeroconf": []
+    "domain": "jablotron_cloud",
+    "name": "Jablotron Cloud",
+    "codeowners": [
+        "@pigotka"
+    ],
+    "config_flow": true,
+    "documentation": "https://github.com/Pigotka/ha-cc-jablotron-cloud",
+    "integration_type": "hub",
+    "iot_class": "cloud_polling",
+    "issue_tracker": "https://github.com/Pigotka/ha-cc-jablotron-cloud/issues",
+    "loggers": [
+        "custom_components.jablotron_cloud"
+    ],
+    "requirements": [
+        "jablotronpy==0.7.0"
+    ],
+    "version": "0.7.0"
 }

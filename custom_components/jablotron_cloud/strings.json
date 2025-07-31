@@ -1,21 +1,51 @@
 {
-  "config": {
-    "step": {
-      "user": {
-        "data": {
-          "pin": "[%key:common::config_flow::data::pin%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+    "config": {
+        "step": {
+            "user": {
+                "data": {
+                    "username": "[%key:common::config_flow::data::username%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "pin": "[%key:common::config_flow::data::pin%]",
+                    "force_update": "[%key:common::config_flow::data::force_update%]",
+                    "scan_interval": "[%key:common::config_flow::data::scan_interval%]",
+                    "timeout": "[%key:common::config_flow::data::timeout%]"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "username": "[%key:common::config_flow::data::username%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "pin": "[%key:common::config_flow::data::pin%]",
+                    "force_update": "[%key:common::config_flow::data::force_update%]",
+                    "scan_interval": "[%key:common::config_flow::data::scan_interval%]",
+                    "timeout": "[%key:common::config_flow::data::timeout%]"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "[%key:common::config_flow::data::username%]",
+                    "password": "[%key:common::config_flow::data::password%]",
+                    "pin": "[%key:common::config_flow::data::pin%]",
+                    "force_update": "[%key:common::config_flow::data::force_update%]",
+                    "scan_interval": "[%key:common::config_flow::data::scan_interval%]",
+                    "timeout": "[%key:common::config_flow::data::timeout%]"
+                }
+            }
+        },
+        "error": {
+            "interval_too_short": "Minimum data refresh interval is 30 seconds!",
+            "timeout_too_low": "Minimum data refresh timeout is 10 seconds!",
+            "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
+        },
+        "abort": {
+            "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+            "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+            "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
         }
-      }
     },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    "exceptions": {
+        "invalid_pin": {
+            "message": "Provided pin code is not valid!"
+        }
     }
-  }
 }

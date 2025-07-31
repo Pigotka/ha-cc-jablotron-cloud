@@ -1,21 +1,51 @@
 {
     "config": {
-        "abort": {
-            "already_configured": "Zařízení je již nakonfigurováno"
-        },
-        "error": {
-            "cannot_connect": "Není možné se připojit",
-            "invalid_auth": "Nesprávné přihlašovací údaje",
-            "unknown": "Neočekávaná chyba"
-        },
         "step": {
             "user": {
                 "data": {
-                    "pin": "PIN",
+                    "username": "Uživatelské jméno",
                     "password": "Heslo",
-                    "username": "Uživatelské jméno"
+                    "pin": "PIN (pro PGs)",
+                    "force_update": "Bypassovat chyby sekcí",
+                    "scan_interval": "Interval aktualizací (v sekundách)",
+                    "timeout": "Časový limit aktualizace (v sekundách)"
+                }
+            },
+            "reconfigure": {
+                "data": {
+                    "username": "Uživatelské jméno",
+                    "password": "Heslo",
+                    "pin": "PIN (pro PGs)",
+                    "force_update": "Bypassovat chyby sekcí",
+                    "scan_interval": "Interval aktualizací (v sekundách)",
+                    "timeout": "Časový limit aktualizace (v sekundách)"
+                }
+            },
+            "reauth_confirm": {
+                "data": {
+                    "username": "Uživatelské jméno",
+                    "password": "Heslo",
+                    "pin": "PIN (pro PGs)",
+                    "force_update": "Bypassovat chyby sekcí",
+                    "scan_interval": "Interval aktualizací (v sekundách)",
+                    "timeout": "Časový limit aktualizace (v sekundách)"
                 }
             }
+        },
+        "error": {
+            "interval_too_short": "Minimální interval aktualizace dat je 30 sekund!",
+            "timeout_too_low": "Minimální časový limit pro obnovení dat je 10 sekund!",
+            "invalid_auth": "Nesprávné přihlašovací údaje pro Jablotron Cloud!"
+        },
+        "abort": {
+            "already_configured": "Zařízení již bylo nakonfigurováno!",
+            "reconfigure_successful": "Zařízení bylo úspěšně překonfigurováno.",
+            "reauth_successful": "Přihlášení do služby Jablotron Cloud bylo úspěšně obnoveno."
+        }
+    },
+    "exceptions": {
+        "invalid_pin": {
+            "message": "Zadaný PIN kód není platný!"
         }
     }
 }
