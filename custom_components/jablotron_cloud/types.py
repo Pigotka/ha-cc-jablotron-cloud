@@ -1,6 +1,10 @@
 from typing import TypedDict
 
-from jablotronpy import JablotronSections, JablotronProgrammableGates, JablotronThermoDevice
+from jablotronpy import (
+    JablotronProgrammableGates,
+    JablotronSections,
+    JablotronThermoDevice,
+)
 
 JablotronServiceData = TypedDict(
     "JablotronServiceData",
@@ -10,6 +14,6 @@ JablotronServiceData = TypedDict(
         "firmware": str,
         "alarm": JablotronSections,
         "gates": JablotronProgrammableGates,
-        "thermo": list[JablotronThermoDevice]
-    }
+        "thermo": list[JablotronThermoDevice],
+    },
 )

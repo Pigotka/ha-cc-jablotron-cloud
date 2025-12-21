@@ -4,14 +4,20 @@ from __future__ import annotations
 
 import logging
 
+from jablotronpy import JablotronProgrammableGatesGate
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from jablotronpy import JablotronProgrammableGatesGate
 
-from . import JablotronConfigEntry, JablotronData, JablotronDataCoordinator, JablotronClient
+from . import (
+    JablotronClient,
+    JablotronConfigEntry,
+    JablotronData,
+    JablotronDataCoordinator,
+)
 from .const import DOMAIN
 from .utils import get_component_state, pg_state_to_binary_state
 
@@ -21,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: F841
     entry: JablotronConfigEntry,
-    async_add_entities: AddEntitiesCallback
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Register binary sensor entity for each Jablotron service uncontrollable programmable gate."""
 
@@ -39,7 +45,9 @@ async def async_setup_entry(
         service_firmware = service_data["firmware"]
 
         # Add all uncontrollable programmable gate entities
-        _LOGGER.debug("Getting available programmable gates for service '%s'", service_name)
+        _LOGGER.debug(
+            "Getting available programmable gates for service '%s'", service_name
+        )
         gates = service_data["gates"]
         for gate in gates.get("programmableGates", []):
             # Get gate details
@@ -51,7 +59,9 @@ async def async_setup_entry(
 
             # Check whether programmable gate is NOT controllable
             if gate["can-control"]:
-                _LOGGER.debug("Programmable gate '%s' is controllable, ignoring!", gate_name)
+                _LOGGER.debug(
+                    "Programmable gate '%s' is controllable, ignoring!", gate_name
+                )
 
                 continue
 
@@ -67,7 +77,7 @@ async def async_setup_entry(
                     service_firmware,
                     gate_id,
                     gate_name,
-                    is_on
+                    is_on,
                 )
             )
 
@@ -80,7 +90,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -
     return True
 
 
-class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], BinarySensorEntity):
+class JablotronProgrammableGate(
+    CoordinatorEntity[JablotronDataCoordinator], BinarySensorEntity
+):
     """Representation of Jablotron Cloud binary sensor entity."""
 
     # Allow custom entity names
@@ -96,7 +108,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Bin
         service_firmware: str,
         gate_id: str,
         gate_name: str,
-        is_on: bool
+        is_on: bool,
     ) -> None:
         """Initialize Jablotron binary sensor."""
 
@@ -126,7 +138,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Bin
             name=self._service_name,
             manufacturer="Jablotron",
             model=self._service_type,
-            sw_version=self._service_firmware
+            sw_version=self._service_firmware,
         )
 
     # noinspection DuplicatedCode
@@ -145,7 +157,9 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Bin
         # Get service states
         service_states = service["gates"]["states"]
         if not service_states:
-            _LOGGER.warning("No states data available for service '%d'!", self._service_id)
+            _LOGGER.warning(
+                "No states data available for service '%d'!", self._service_id
+            )
 
             return
 

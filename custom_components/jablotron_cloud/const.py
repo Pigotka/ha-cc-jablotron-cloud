@@ -9,8 +9,8 @@ UNSUPPORTED_SERVICES = ["FUTURA2", "AMBIENTA", "VOLTA", "LOGBOOK"]
 PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
-    Platform.SWITCH,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 # Jablotron states as Home Assistant states
@@ -20,7 +20,4 @@ SECTION_STATE_AS_ALARM_STATE = {
     "DISARM": AlarmControlPanelState.DISARMED,
 }
 
-PG_STATE_AS_BINARY_STATE = {
-    "ON": True,
-    "OFF": False
-}
+PG_STATE_AS_BINARY_STATE = {"ON": True, "OFF": False}

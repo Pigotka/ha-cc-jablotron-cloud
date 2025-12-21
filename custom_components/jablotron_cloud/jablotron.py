@@ -10,7 +10,13 @@ class JablotronClient:
 
     services: dict[int, JablotronServiceData] = {}
 
-    def __init__(self, username: str, password: str, default_pin: str | None = None, force_arm: bool = True) -> None:
+    def __init__(
+        self,
+        username: str,
+        password: str,
+        default_pin: str | None = None,
+        force_arm: bool = True,
+    ) -> None:
         """Initialize Jablotron client."""
 
         self._username = username

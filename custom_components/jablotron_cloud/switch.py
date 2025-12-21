@@ -4,15 +4,25 @@ from __future__ import annotations
 
 import logging
 
+from jablotronpy import (
+    IncorrectPinCodeException,
+    JablotronProgrammableGatesGate,
+    UnauthorizedException,
+)
+
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from jablotronpy import JablotronProgrammableGatesGate, UnauthorizedException, IncorrectPinCodeException
 
-from . import JablotronConfigEntry, JablotronData, JablotronDataCoordinator, JablotronClient
+from . import (
+    JablotronClient,
+    JablotronConfigEntry,
+    JablotronData,
+    JablotronDataCoordinator,
+)
 from .const import DOMAIN
 from .utils import get_component_state, pg_state_to_binary_state
 
@@ -22,7 +32,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: F841
     entry: JablotronConfigEntry,
-    async_add_entities: AddEntitiesCallback
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Register switch entity for each Jablotron service controllable programmable gate."""
 
@@ -40,7 +50,9 @@ async def async_setup_entry(
         service_firmware = service_data["firmware"]
 
         # Add all controllable programmable gate entities
-        _LOGGER.debug("Getting available programmable gates for service '%s'", service_name)
+        _LOGGER.debug(
+            "Getting available programmable gates for service '%s'", service_name
+        )
         gates = service_data["gates"]
         for gate in gates.get("programmableGates", []):
             # Get gate details
@@ -52,7 +64,9 @@ async def async_setup_entry(
 
             # Check whether programmable gate is controllable
             if not gate["can-control"]:
-                _LOGGER.debug("Programmable gate '%s' is uncontrollable, ignoring!", gate_name)
+                _LOGGER.debug(
+                    "Programmable gate '%s' is uncontrollable, ignoring!", gate_name
+                )
 
                 continue
 
@@ -68,7 +82,7 @@ async def async_setup_entry(
                     service_firmware,
                     gate_id,
                     gate_name,
-                    is_on
+                    is_on,
                 )
             )
 
@@ -81,7 +95,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -
     return True
 
 
-class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity):
+class JablotronProgrammableGate(
+    CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
+):
     """Representation of Jablotron Cloud switch entity."""
 
     # Allow custom entity names
@@ -98,7 +114,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
         service_firmware: str,
         gate_id: str,
         gate_name: str,
-        is_on: bool
+        is_on: bool,
     ) -> None:
         """Initialize Jablotron switch."""
 
@@ -128,7 +144,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
             name=self._service_name,
             manufacturer="Jablotron",
             model=self._service_type,
-            sw_version=self._service_firmware
+            sw_version=self._service_firmware,
         )
 
     def turn_on(self, **kwargs) -> None:
@@ -141,7 +157,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
                 service_id=self._service_id,
                 service_type=self._service_type,
                 component_id=self._gate_id,
-                state="ON"
+                state="ON",
             )
 
             # Set state to on if turn on action was successful
@@ -152,8 +168,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_pin"
+                translation_domain=DOMAIN, translation_key="invalid_pin"
             )
 
     def turn_off(self, **kwargs) -> None:
@@ -166,7 +181,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
                 service_id=self._service_id,
                 service_type=self._service_type,
                 component_id=self._gate_id,
-                state="OFF"
+                state="OFF",
             )
 
             # Set state to off if turn off action was successful
@@ -177,8 +192,7 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
             raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_pin"
+                translation_domain=DOMAIN, translation_key="invalid_pin"
             )
 
     # noinspection DuplicatedCode
@@ -197,7 +211,9 @@ class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], Swi
         # Get service states
         service_states = service["gates"]["states"]
         if not service_states:
-            _LOGGER.warning("No states data available for service '%d'!", self._service_id)
+            _LOGGER.warning(
+                "No states data available for service '%d'!", self._service_id
+            )
 
             return
 
