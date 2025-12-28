@@ -18,12 +18,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
-    JablotronClient,
-    JablotronConfigEntry,
-    JablotronData,
-    JablotronDataCoordinator,
-)
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN
 from .utils import get_component_state, section_state_to_alarm_state
 
@@ -31,7 +26,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: F841
+    hass: HomeAssistant,
     entry: JablotronConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -64,9 +59,7 @@ async def async_setup_entry(
 
             # Check whether section is controllable
             if not section["can-control"]:
-                _LOGGER.debug(
-                    "Section '%s' is not controllable, ignoring!", section_name
-                )
+                _LOGGER.debug("Section '%s' is not controllable, ignoring!", section_name)
 
                 continue
 
@@ -91,15 +84,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:  # noqa: F841
+async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:
     """Unload alarm panel entities."""
 
     return True
 
 
-class JablotronAlarmControlPanel(
-    CoordinatorEntity[JablotronDataCoordinator], AlarmControlPanelEntity
-):
+class JablotronAlarmControlPanel(CoordinatorEntity[JablotronDataCoordinator], AlarmControlPanelEntity):
     """Representation of Jablotron Cloud alarm panel entity."""
 
     # Allow custom entity names
@@ -196,9 +187,7 @@ class JablotronAlarmControlPanel(
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_pin"
-            )
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin")
 
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm request."""
@@ -223,9 +212,7 @@ class JablotronAlarmControlPanel(
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_pin"
-            )
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin")
 
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send partial arm request."""
@@ -254,9 +241,7 @@ class JablotronAlarmControlPanel(
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_pin"
-            )
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin")
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -273,9 +258,7 @@ class JablotronAlarmControlPanel(
         # Get service states
         service_states = service["alarm"]["states"]
         if not service_states:
-            _LOGGER.warning(
-                "No states data available for service '%d'!", self._service_id
-            )
+            _LOGGER.warning("No states data available for service '%d'!", self._service_id)
 
             return
 
@@ -290,6 +273,4 @@ class JablotronAlarmControlPanel(
         self._attr_alarm_state = section_state_to_alarm_state(section_state)
         self.async_write_ha_state()
 
-        _LOGGER.debug(
-            "Successfully updated alarm state for section '%s'", self._section_name
-        )
+        _LOGGER.debug("Successfully updated alarm state for section '%s'", self._section_name)

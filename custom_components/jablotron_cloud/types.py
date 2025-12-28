@@ -1,19 +1,14 @@
+"""Types for Jablotron Cloud integration."""
+
 from typing import TypedDict
 
-from jablotronpy import (
-    JablotronProgrammableGates,
-    JablotronSections,
-    JablotronThermoDevice,
-)
+from jablotronpy import JablotronProgrammableGates, JablotronSections, JablotronThermoDevice
 
-JablotronServiceData = TypedDict(
-    "JablotronServiceData",
-    {
-        "name": str,
-        "type": str,
-        "firmware": str,
-        "alarm": JablotronSections,
-        "gates": JablotronProgrammableGates,
-        "thermo": list[JablotronThermoDevice],
-    },
-)
+
+class JablotronServiceData(TypedDict):
+    name: str
+    type: str
+    firmware: str
+    alarm: JablotronSections
+    gates: JablotronProgrammableGates
+    thermo: list[JablotronThermoDevice]

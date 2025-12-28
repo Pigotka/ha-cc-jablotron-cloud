@@ -4,11 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from jablotronpy import (
-    IncorrectPinCodeException,
-    JablotronProgrammableGatesGate,
-    UnauthorizedException,
-)
+from jablotronpy import IncorrectPinCodeException, JablotronProgrammableGatesGate, UnauthorizedException
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -17,12 +13,7 @@ from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
-    JablotronClient,
-    JablotronConfigEntry,
-    JablotronData,
-    JablotronDataCoordinator,
-)
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN
 from .utils import get_component_state, pg_state_to_binary_state
 
@@ -30,7 +21,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: F841
+    hass: HomeAssistant,
     entry: JablotronConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -50,9 +41,7 @@ async def async_setup_entry(
         service_firmware = service_data["firmware"]
 
         # Add all controllable programmable gate entities
-        _LOGGER.debug(
-            "Getting available programmable gates for service '%s'", service_name
-        )
+        _LOGGER.debug("Getting available programmable gates for service '%s'", service_name)
         gates = service_data["gates"]
         for gate in gates.get("programmableGates", []):
             # Get gate details
@@ -64,9 +53,7 @@ async def async_setup_entry(
 
             # Check whether programmable gate is controllable
             if not gate["can-control"]:
-                _LOGGER.debug(
-                    "Programmable gate '%s' is uncontrollable, ignoring!", gate_name
-                )
+                _LOGGER.debug("Programmable gate '%s' is uncontrollable, ignoring!", gate_name)
 
                 continue
 
@@ -89,15 +76,13 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:  # noqa: F841
+async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:
     """Unload switch entities."""
 
     return True
 
 
-class JablotronProgrammableGate(
-    CoordinatorEntity[JablotronDataCoordinator], SwitchEntity
-):
+class JablotronProgrammableGate(CoordinatorEntity[JablotronDataCoordinator], SwitchEntity):
     """Representation of Jablotron Cloud switch entity."""
 
     # Allow custom entity names
@@ -167,9 +152,7 @@ class JablotronProgrammableGate(
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_pin"
-            )
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin")
 
     def turn_off(self, **kwargs) -> None:
         """Send turn off request."""
@@ -191,9 +174,7 @@ class JablotronProgrammableGate(
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="invalid_pin"
-            )
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin")
 
     # noinspection DuplicatedCode
     @callback
@@ -211,9 +192,7 @@ class JablotronProgrammableGate(
         # Get service states
         service_states = service["gates"]["states"]
         if not service_states:
-            _LOGGER.warning(
-                "No states data available for service '%d'!", self._service_id
-            )
+            _LOGGER.warning("No states data available for service '%d'!", self._service_id)
 
             return
 

@@ -6,30 +6,21 @@ import logging
 
 from jablotronpy import JablotronThermoDevice
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorStateClass,
-)
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntity, SensorStateClass
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import (
-    JablotronClient,
-    JablotronConfigEntry,
-    JablotronData,
-    JablotronDataCoordinator,
-)
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: F841
+    hass: HomeAssistant,
     entry: JablotronConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
@@ -74,7 +65,7 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:  # noqa: F841
+async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:
     """Unload sensor entities."""
 
     return True
@@ -135,9 +126,7 @@ class JablotronSensor(CoordinatorEntity[JablotronDataCoordinator], SensorEntity)
         """Process data retrieved by coordinator."""
 
         # Get corresponding service data
-        _LOGGER.debug(
-            "Updating thermo device state for device '%s'", self._thermo_device_id
-        )
+        _LOGGER.debug("Updating thermo device state for device '%s'", self._thermo_device_id)
         service = self._client.services.get(self._service_id, None)
         if not service:
             _LOGGER.error("No data available for service '%d'!", self._service_id)
@@ -147,9 +136,7 @@ class JablotronSensor(CoordinatorEntity[JablotronDataCoordinator], SensorEntity)
         # Get service devices
         thermo_devices = service["thermo"]
         if not thermo_devices:
-            _LOGGER.warning(
-                "No thermo devices available for service '%d'!", self._service_id
-            )
+            _LOGGER.warning("No thermo devices available for service '%d'!", self._service_id)
 
             return
 
@@ -162,9 +149,7 @@ class JablotronSensor(CoordinatorEntity[JablotronDataCoordinator], SensorEntity)
             None,
         )
         if not thermo_device:
-            _LOGGER.warning(
-                "No thermo device found with id '%s'!", self._thermo_device_id
-            )
+            _LOGGER.warning("No thermo device found with id '%s'!", self._thermo_device_id)
 
             return
 

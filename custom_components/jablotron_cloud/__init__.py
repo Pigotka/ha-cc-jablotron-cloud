@@ -2,25 +2,26 @@
 
 from __future__ import annotations
 
-import logging
 from asyncio import timeout
 from dataclasses import dataclass
 from datetime import timedelta
+import logging
+
+from jablotronpy import Jablotron, UnauthorizedException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    CONF_USERNAME,
+    CONF_FORCE_UPDATE,
     CONF_PASSWORD,
     CONF_PIN,
-    CONF_FORCE_UPDATE,
     CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT
+    CONF_TIMEOUT,
+    CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from jablotronpy import Jablotron, UnauthorizedException
 
 from .const import PLATFORMS, UNSUPPORTED_SERVICES
 from .jablotron import JablotronClient
@@ -100,7 +101,11 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: JablotronConfig
 
     # Set config entry version to the latest one
     hass.config_entries.async_update_entry(config_entry, data=new_data, minor_version=1, version=3)
-    _LOGGER.info("Migrated configuration to version %s.%s", config_entry.version, config_entry.minor_version)
+    _LOGGER.info(
+        "Migrated configuration to version %s.%s",
+        config_entry.version,
+        config_entry.minor_version,
+    )
 
     return True
 
@@ -116,7 +121,13 @@ class JablotronData:
 class JablotronDataCoordinator(DataUpdateCoordinator):
     """Data coordinator for Jablotron Cloud integration."""
 
-    def __init__(self, hass: HomeAssistant, client: JablotronClient, scan_interval: int, scan_timeout: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: JablotronClient,
+        scan_interval: int,
+        scan_timeout: int,
+    ) -> None:
         """Initialize Home Assistant data update coordinator."""
 
         # Define coordinator attributes
@@ -128,7 +139,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             hass,
             _LOGGER,
             name="Jablotron Cloud",
-            update_interval=timedelta(seconds=scan_interval)
+            update_interval=timedelta(seconds=scan_interval),
         )
 
     async def _async_setup(self) -> None:
@@ -137,8 +148,8 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         try:
             # Get available services from Jablotron Cloud
             _LOGGER.debug("Discovering available Jablotron services")
-            bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)  # noqa
-            services = await self.hass.async_add_executor_job(bridge.get_services)  # noqa
+            bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)
+            services = await self.hass.async_add_executor_job(bridge.get_services)
 
             # Log that no services were discovered
             if not services:
@@ -158,40 +169,38 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     continue
 
                 # Initialize service data
-                self._client.services[service_id] = JablotronServiceData(name=service_name, type=service_type)  # noqa
+                self._client.services[service_id] = JablotronServiceData(name=service_name, type=service_type)
 
                 # Get additional service data
                 _LOGGER.debug("Fetching additional data for service '%d'", service_id)
-                self._client.services[service_id]["firmware"] = (await self.hass.async_add_executor_job(
-                    bridge.get_service_information,
-                    service_id
-                )).get("device", {}).get("firmware", "N/A")
+                self._client.services[service_id]["firmware"] = (
+                    (await self.hass.async_add_executor_job(bridge.get_service_information, service_id))
+                    .get("device", {})
+                    .get("firmware", "N/A")
+                )
 
                 # Get available sections from Jablotron Cloud
                 _LOGGER.debug("Discovering available sections for service '%d'", service_id)
                 self._client.services[service_id]["alarm"] = await self.hass.async_add_executor_job(
-                    bridge.get_sections,
-                    service_id,
-                    service_type
+                    bridge.get_sections, service_id, service_type
                 )
 
                 # Get available gates from Jablotron Cloud
                 _LOGGER.debug("Discovering available gates for service '%d'", service_id)
                 self._client.services[service_id]["gates"] = await self.hass.async_add_executor_job(
-                    bridge.get_programmable_gates,
-                    service_id,
-                    service_type
+                    bridge.get_programmable_gates, service_id, service_type
                 )
 
                 # Get available thermo devices from Jablotron Cloud
                 _LOGGER.debug("Discovering available thermo devices for service '%d'", service_id)
                 self._client.services[service_id]["thermo"] = await self.hass.async_add_executor_job(
-                    bridge.get_thermo_devices,
-                    service_id,
-                    service_type
+                    bridge.get_thermo_devices, service_id, service_type
                 )
 
-                _LOGGER.debug("Successfully discovered available platforms for service '%d'", service_id)
+                _LOGGER.debug(
+                    "Successfully discovered available platforms for service '%d'",
+                    service_id,
+                )
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
 
@@ -203,7 +212,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             async with timeout(self._scan_timeout):
                 # Get fresh Jablotron Cloud session
                 _LOGGER.debug("Updating data for available Jablotron services")
-                bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)  # noqa
+                bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)
 
                 # Update data for all available services
                 for service_id in self._client.services:
@@ -213,28 +222,25 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     # Update sections data from Jablotron Cloud
                     _LOGGER.debug("Updating sections data for service '%d'", service_id)
                     self._client.services[service_id]["alarm"] = await self.hass.async_add_executor_job(
-                        bridge.get_sections,
-                        service_id,
-                        service_type
+                        bridge.get_sections, service_id, service_type
                     )
 
                     # Update gates data from Jablotron Cloud
                     _LOGGER.debug("Updating gates data for service '%d'", service_id)
                     self._client.services[service_id]["gates"] = await self.hass.async_add_executor_job(
-                        bridge.get_programmable_gates,
-                        service_id,
-                        service_type
+                        bridge.get_programmable_gates, service_id, service_type
                     )
 
                     # Update thermo devices data from Jablotron Cloud
                     _LOGGER.debug("Updating thermo devices data for service '%d'", service_id)
                     self._client.services[service_id]["thermo"] = await self.hass.async_add_executor_job(
-                        bridge.get_thermo_devices,
-                        service_id,
-                        service_type
+                        bridge.get_thermo_devices, service_id, service_type
                     )
 
-                    _LOGGER.debug("Successfully updated platforms data for service '%d'", service_id)
+                    _LOGGER.debug(
+                        "Successfully updated platforms data for service '%d'",
+                        service_id,
+                    )
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except TimeoutError:

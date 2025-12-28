@@ -20,9 +20,7 @@ def update_unique_id(entity_entry: RegistryEntry) -> dict | None:
 
     # Check whether unique id contains space
     if " " in entity_entry.unique_id:
-        _LOGGER.info(
-            "Migrating entity '%s' to the new unique id schema", entity_entry.entity_id
-        )
+        _LOGGER.info("Migrating entity '%s' to the new unique id schema", entity_entry.entity_id)
 
         return {"new_unique_id": entity_entry.unique_id.replace(" ", "_")}
 
@@ -36,11 +34,9 @@ def get_component_state(
     """Return Jablotron component state."""
 
     # Get component state dict
-    component_state: JablotronSectionsState | JablotronProgrammableGatesState | None = (
-        next(
-            filter(lambda state: state["cloud-component-id"] == component_id, states),
-            None,
-        )
+    component_state: JablotronSectionsState | JablotronProgrammableGatesState | None = next(
+        filter(lambda state: state["cloud-component-id"] == component_id, states),
+        None,
     )
     if not component_state:
         return None

@@ -2,18 +2,19 @@
 
 import logging
 
+from jablotronpy import UnauthorizedException
 import voluptuous as vol
+
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    CONF_USERNAME,
+    CONF_FORCE_UPDATE,
     CONF_PASSWORD,
     CONF_PIN,
-    CONF_FORCE_UPDATE,
     CONF_SCAN_INTERVAL,
-    CONF_TIMEOUT
+    CONF_TIMEOUT,
+    CONF_USERNAME,
 )
-from jablotronpy import UnauthorizedException
 
 from .const import DOMAIN
 from .jablotron import JablotronClient
@@ -31,24 +32,20 @@ def get_schema(config: dict) -> vol.Schema:
             vol.Optional(CONF_PIN, default=config.get(CONF_PIN, "")): str,
             vol.Optional(CONF_FORCE_UPDATE, default=config.get(CONF_FORCE_UPDATE, True)): bool,
             vol.Optional(CONF_SCAN_INTERVAL, default=config.get(CONF_SCAN_INTERVAL, 30)): int,
-            vol.Optional(CONF_TIMEOUT, default=config.get(CONF_TIMEOUT, 15)): int
+            vol.Optional(CONF_TIMEOUT, default=config.get(CONF_TIMEOUT, 15)): int,
         }
     )
 
 
 async def handle_configuration(
-    self: ConfigFlow,
-    user_input: dict | None,
-    step_id: str,
-    config_entry_data: dict
+    self: ConfigFlow, user_input: dict | None, step_id: str, config_entry_data: dict
 ) -> ConfigFlowResult | None:
     """Handle configuration from config flows."""
 
     # Open configuration dialog
     if user_input is None:
         return self.async_show_form(  # type: ignore
-            step_id=step_id,
-            data_schema=get_schema(config_entry_data)
+            step_id=step_id, data_schema=get_schema(config_entry_data)
         )
 
     # Validate interval value
@@ -56,7 +53,7 @@ async def handle_configuration(
         return self.async_show_form(  # type: ignore
             step_id=step_id,
             data_schema=get_schema(user_input),
-            errors={"base": "interval_too_short"}
+            errors={"base": "interval_too_short"},
         )
 
     # Validate timeout value
@@ -64,7 +61,7 @@ async def handle_configuration(
         return self.async_show_form(  # type: ignore
             step_id=step_id,
             data_schema=get_schema(user_input),
-            errors={"base": "timeout_too_low"}
+            errors={"base": "timeout_too_low"},
         )
 
     try:
@@ -75,7 +72,7 @@ async def handle_configuration(
         return self.async_show_form(  # type: ignore
             step_id=step_id,
             data_schema=get_schema(user_input),
-            errors={"base": "invalid_auth"}
+            errors={"base": "invalid_auth"},
         )
 
 
@@ -104,8 +101,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if flow_result is None:
             _LOGGER.info("Jablotron Cloud integration successfully configured")
             return self.async_create_entry(title="Jablotron Cloud", data=user_input)  # type: ignore
-        else:
-            return flow_result  # type: ignore
+        return flow_result  # type: ignore
 
     async def async_step_reconfigure(self, user_input: dict | None = None) -> ConfigFlowResult:
         """User flow to reconfigure Jablotron Cloud integration."""
@@ -122,12 +118,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(  # type: ignore
                 config_entry,
                 unique_id=config_entry.unique_id,
-                data={**config_entry.data, **user_input}
+                data={**config_entry.data, **user_input},
             )
-        else:
-            return flow_result  # type: ignore
+        return flow_result  # type: ignore
 
-    async def async_step_reauth(self, entry_data: dict | None = None) -> ConfigFlowResult:  # noqa: F841
+    async def async_step_reauth(self, entry_data: dict | None = None) -> ConfigFlowResult:
         """Handler for API authentication errors."""
 
         return await self.async_step_reauth_confirm()  # type: ignore
@@ -147,7 +142,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(  # type: ignore
                 config_entry,
                 unique_id=config_entry.unique_id,
-                data={**config_entry.data, **user_input}
+                data={**config_entry.data, **user_input},
             )
-        else:
-            return flow_result  # type: ignore
+        return flow_result  # type: ignore
