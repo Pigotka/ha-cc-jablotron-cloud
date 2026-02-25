@@ -13,7 +13,7 @@
         "custom_components.jablotron_cloud"
     ],
     "requirements": [
-        "jablotronpy==0.7.2"
+        "jablotronpy==0.7.3"
     ],
-    "version": "0.7.2"
+    "version": "0.7.0"
 }

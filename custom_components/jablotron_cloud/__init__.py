@@ -7,6 +7,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
+from jablotronpy import Jablotron, UnauthorizedException
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_FORCE_UPDATE,
@@ -20,10 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.entity_registry import async_migrate_entries
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from jablotronpy import Jablotron, UnauthorizedException
 
 from .const import PLATFORMS, UNSUPPORTED_SERVICES
-from .jablotron import JablotronClient, JablotronBridge
+from .jablotron import JablotronClient
 from .types import JablotronServiceData
 from .utils import update_unique_id
 
@@ -147,7 +148,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
         try:
             # Get available services from Jablotron Cloud
             _LOGGER.debug("Discovering available Jablotron services")
-            bridge: JablotronBridge = await self.hass.async_add_executor_job(self._client.get_bridge)
+            bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)
             services = await self.hass.async_add_executor_job(bridge.get_services)
 
             # Log that no services were discovered
@@ -211,7 +212,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
             async with timeout(self._scan_timeout):
                 # Get fresh Jablotron Cloud session
                 _LOGGER.debug("Updating data for available Jablotron services")
-                bridge: JablotronBridge = await self.hass.async_add_executor_job(self._client.get_bridge)
+                bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)
 
                 # Update data for all available services
                 for service_id in self._client.services:

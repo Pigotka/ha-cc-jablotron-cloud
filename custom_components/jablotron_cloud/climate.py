@@ -208,7 +208,7 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
             bridge = await self._hass.async_add_executor_job(self._client.get_bridge)
             success = await self._hass.async_add_executor_job(
                 partial(
-                    bridge.set_thermo_device_temperature,
+                    bridge.control_thermo_device,
                     service_id=self._service_id,
                     object_device_id=self._thermo_device_id,
                     temperature=temperature,
