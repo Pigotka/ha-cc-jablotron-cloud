@@ -161,11 +161,23 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
                 _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
                 return
 
-            # When turning on from OFF/STAND_BY, use "ON" to wake the device first
-            if self._attr_hvac_mode == HVACMode.OFF and hvac_mode != HVACMode.OFF:
-                heating_mode = "ON"
-
             bridge = await self._hass.async_add_executor_job(self._client.get_bridge)
+
+            # When turning on from OFF/STAND_BY, wake the device first before setting the actual mode
+            if self._attr_hvac_mode == HVACMode.OFF and hvac_mode != HVACMode.OFF:
+                wake_success = await self._hass.async_add_executor_job(
+                    partial(
+                        bridge.control_thermo_device,
+                        service_id=self._service_id,
+                        object_device_id=self._thermo_device_id,
+                        heating_mode="ON",
+                        service_type=self._service_type
+                    )
+                )
+                if not wake_success:
+                    _LOGGER.error("Failed to wake thermo device '%s'", self._thermo_device_id)
+                    return
+
             success = await self._hass.async_add_executor_job(
                 partial(
                     bridge.control_thermo_device,
