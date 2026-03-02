@@ -11,8 +11,8 @@ PLATFORMS: list[Platform] = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
-    Platform.SWITCH,
     Platform.SENSOR,
+    Platform.SWITCH,
 ]
 
 # Jablotron states as Home Assistant states

@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity import DeviceInfo
@@ -84,12 +84,6 @@ async def async_setup_entry(
             )
 
     async_add_entities(entities)
-
-
-async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:
-    """Unload climate entities."""
-
-    return True
 
 
 class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntity):
@@ -199,7 +193,7 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
 
-        temperature = kwargs.get("temperature")
+        temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             _LOGGER.warning("No temperature provided for set_temperature")
             return
