@@ -43,6 +43,10 @@ async def async_setup_entry(
         _LOGGER.debug("Getting available thermo devices for service '%s'", service_name)
         thermo_devices = service_data["thermo"]
         for thermo_device in thermo_devices:
+            # Skip controllable thermo devices — handled by the climate platform
+            if thermo_device.get("thermo-device", {}).get("can-control", False):
+                continue
+
             # Get thermo device details
             thermo_device_id = thermo_device["object-device-id"]
             current_temperature = thermo_device["temperature"]

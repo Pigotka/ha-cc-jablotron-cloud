@@ -46,6 +46,9 @@
     "exceptions": {
         "invalid_pin": {
             "message": "Provided pin code is not valid!"
+        },
+        "control_failed": {
+            "message": "Failed to control thermo device!"
         }
     }
 }

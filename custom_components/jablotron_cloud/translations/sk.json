@@ -46,6 +46,9 @@
     "exceptions": {
         "invalid_pin": {
             "message": "Zadaný PIN kód nie je platný!"
+        },
+        "control_failed": {
+            "message": "Nepodarilo sa ovládať termo zariadenie!"
         }
     }
 }

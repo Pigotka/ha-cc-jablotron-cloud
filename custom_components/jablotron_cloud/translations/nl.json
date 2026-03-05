@@ -46,6 +46,9 @@
     "exceptions": {
         "invalid_pin": {
             "message": "De ingevoerde pincode is niet geldig!"
+        },
+        "control_failed": {
+            "message": "Kan het thermo-apparaat niet bedienen!"
         }
     }
 }
