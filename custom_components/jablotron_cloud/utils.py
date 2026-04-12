@@ -2,7 +2,7 @@
 
 import logging
 
-from jablotronpy import JablotronProgrammableGatesState, JablotronSectionsState
+from jablotronpy import JablotronProgrammableGatesState, JablotronSectionsState, JablotronThermoDevice
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.const import STATE_UNKNOWN
@@ -54,3 +54,15 @@ def pg_state_to_binary_state(state: str | None) -> bool:
     """Convert programmable gate state to boolean value."""
 
     return PG_STATE_AS_BINARY_STATE.get(state, False)
+
+
+def get_thermo_device(
+    device_id: str,
+    devices: list[JablotronThermoDevice],
+) -> JablotronThermoDevice | None:
+    """Return Jablotron thermo device by ID."""
+
+    return next(
+        filter(lambda device: device["object-device-id"] == device_id, devices),
+        None,
+    )
