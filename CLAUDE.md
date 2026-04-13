@@ -10,7 +10,6 @@ Cloud-polling hub with 5 entity platforms: alarm_control_panel, binary_sensor, c
 - Entities read state from `client.services[service_id]` in `_handle_coordinator_update()`, not from `coordinator.data`
 - `can-control` flag splits same data source into read-only vs read-write platforms (binary_sensor/switch, sensor/climate)
 - All entities from same Jablotron service share one HA device via `identifiers={(DOMAIN, str(service_id))}`
-- No shared entity base class - patterns are copy-pasted across platforms
 
 ## Code Style
 - Ruff linting matching HA core rules (see pyproject.toml): line length 120, Python 3.12, Google docstrings
