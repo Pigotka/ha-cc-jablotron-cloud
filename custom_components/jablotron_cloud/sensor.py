@@ -64,6 +64,7 @@ async def async_setup_entry(
         # Add non-controllable section state sensors
         _LOGGER.debug("Getting available sections for service '%s'", service_name)
         alarm = service_data.get("alarm", {})
+        alarm_states = alarm.get("states", [])
         for section in alarm.get("sections", []):
             section_name = section.get("name")
             section_id = section.get("cloud-component-id")
@@ -74,7 +75,7 @@ async def async_setup_entry(
                 continue
 
             # Get initial state (may be None)
-            section_state = get_component_state(section_id, alarm.get("states", []))
+            section_state = get_component_state(section_id, alarm_states)
 
             _LOGGER.debug("Adding non-controllable section state sensor '%s'", section_name)
             entities.append(
@@ -169,7 +170,6 @@ class JablotronSectionStateSensor(JablotronEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Process data retrieved by coordinator and update sensor state."""
-        _LOGGER.debug("Updating section state for '%s'", self._section_name)
         service = self._client.services.get(self._service_id, None)
         if not service:
             _LOGGER.error("No data available for service '%d'!", self._service_id)
@@ -185,8 +185,11 @@ class JablotronSectionStateSensor(JablotronEntity, SensorEntity):
             _LOGGER.warning("No state available for section '%s'!", self._section_name)
             return
 
+        # Only write if state changed
+        if section_state == self._attr_native_value:
+            return
+
         # Expose the raw section state string (e.g. "ARM", "DISARM", "PARTIAL_ARM")
         self._attr_native_value = section_state
         self.async_write_ha_state()
-
         _LOGGER.debug("Successfully updated section state for '%s' to '%s'", self._section_name, section_state)
