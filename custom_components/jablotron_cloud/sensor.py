@@ -114,7 +114,7 @@ class JablotronSensor(JablotronEntity, SensorEntity):
     ) -> None:
         """Initialize Jablotron sensor."""
         self._thermo_device_id = thermo_device_id
-        self._attr_translation_key = "thermo_device_temperature"
+        self._attr_name = f"{thermo_device_id}_temperature"
         self._attr_unique_id = f"{service_id}_{thermo_device_id}"
         self._attr_native_value = current_temperature
         super().__init__(coordinator, client, service_id, service_name, service_type, service_firmware)
@@ -161,7 +161,7 @@ class JablotronSectionStateSensor(JablotronEntity, SensorEntity):
         """Initialize Jablotron section state sensor."""
         self._section_id = section_id
         self._section_name = section_name
-        self._attr_translation_key = "section_state"
+        self._attr_name = f"{section_name}_state"
         self._attr_unique_id = f"{service_id}_{section_id}_state"
         self._attr_native_value = initial_state if initial_state is not None else STATE_UNKNOWN
         super().__init__(coordinator, client, service_id, service_name, service_type, service_firmware)
