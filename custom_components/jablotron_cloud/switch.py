@@ -28,6 +28,7 @@ async def async_setup_entry(
 ) -> None:
     """Register switch entity for each Jablotron service controllable programmable gate."""
 
+    _LOGGER.debug("Adding Jablotron switch entities")
     runtime_data: JablotronData = entry.runtime_data
     coordinator = runtime_data.coordinator
     client = runtime_data.client
@@ -38,6 +39,7 @@ async def async_setup_entry(
         service_type = service_data["type"]
         service_firmware = service_data["firmware"]
 
+        _LOGGER.debug("Getting available programmable gates for service '%s'", service_name)
         gates = service_data["gates"]
         for gate in gates.get("programmableGates", []):
             gate: JablotronProgrammableGatesGate
@@ -50,6 +52,7 @@ async def async_setup_entry(
                 _LOGGER.debug("Programmable gate '%s' is uncontrollable, ignoring!", gate_name)
                 continue
 
+            _LOGGER.debug("Adding controllable programmable gate '%s' with initial state '%s'", gate_name, gate_state)
             entities.append(
                 JablotronProgrammableGate(
                     coordinator,
@@ -95,6 +98,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Send turn on request."""
         try:
+            _LOGGER.debug("Sending turn on for gate '%s' (service %d)", self._gate_name, self._service_id)
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
             turn_on_successful = await self.hass.async_add_executor_job(
                 partial(
@@ -116,6 +120,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send turn off request."""
         try:
+            _LOGGER.debug("Sending turn off for gate '%s' (service %d)", self._gate_name, self._service_id)
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
             turn_off_successful = await self.hass.async_add_executor_job(
                 partial(
@@ -152,5 +157,6 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
             _LOGGER.warning("No state available for gate '%s'!", self._gate_name)
             return
 
+        _LOGGER.debug("Gate '%s' received state '%s'", self._gate_name, gate_state)
         self._attr_is_on = pg_state_to_binary_state(gate_state)
         self.async_write_ha_state()

@@ -198,8 +198,11 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                 )
 
                 _LOGGER.debug(
-                    "Successfully discovered available platforms for service '%d'",
+                    "Service '%d' discovered: %d sections, %d gates, %d thermo devices",
                     service_id,
+                    len(self._client.services[service_id]["alarm"].get("sections", [])),
+                    len(self._client.services[service_id]["gates"].get("programmableGates", [])),
+                    len(self._client.services[service_id]["thermo"]),
                 )
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex

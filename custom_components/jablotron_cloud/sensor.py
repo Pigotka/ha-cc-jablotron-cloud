@@ -23,6 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Register sensor entity for each Jablotron service thermo device."""
 
+    _LOGGER.debug("Adding Jablotron sensor entities")
     runtime_data: JablotronData = entry.runtime_data
     coordinator = runtime_data.coordinator
     client = runtime_data.client
@@ -33,6 +34,7 @@ async def async_setup_entry(
         service_type = service_data["type"]
         service_firmware = service_data["firmware"]
 
+        _LOGGER.debug("Getting available thermo devices for service '%s'", service_name)
         thermo_devices = service_data["thermo"]
         for thermo_device in thermo_devices:
             # Skip controllable thermo devices — handled by the climate platform
@@ -42,6 +44,9 @@ async def async_setup_entry(
             thermo_device_id = thermo_device["object-device-id"]
             current_temperature = thermo_device["temperature"]
 
+            _LOGGER.debug(
+                "Adding thermo device '%s' with initial temperature %s", thermo_device_id, current_temperature
+            )
             entities.append(
                 JablotronSensor(
                     coordinator,
@@ -101,5 +106,7 @@ class JablotronSensor(JablotronEntity, SensorEntity):
             _LOGGER.warning("No thermo device found with id '%s'!", self._thermo_device_id)
             return
 
-        self._attr_native_value = thermo_device["temperature"]
+        temperature = thermo_device["temperature"]
+        _LOGGER.debug("Device '%s' received temperature %s", self._thermo_device_id, temperature)
+        self._attr_native_value = temperature
         self.async_write_ha_state()

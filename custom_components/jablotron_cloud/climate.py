@@ -29,6 +29,7 @@ async def async_setup_entry(
 ) -> None:
     """Register climate entity for each Jablotron service thermo device."""
 
+    _LOGGER.debug("Adding Jablotron climate entities")
     runtime_data: JablotronData = entry.runtime_data
     coordinator = runtime_data.coordinator
     client = runtime_data.client
@@ -39,6 +40,7 @@ async def async_setup_entry(
         service_type = service_data["type"]
         service_firmware = service_data["firmware"]
 
+        _LOGGER.debug("Getting available thermo devices for service '%s'", service_name)
         thermo_devices = service_data["thermo"]
         for thermo_device in thermo_devices:
             thermo_device_id = thermo_device["object-device-id"]
@@ -55,6 +57,13 @@ async def async_setup_entry(
             min_temp = thermo_state.get("temperature-range-min")
             max_temp = thermo_state.get("temperature-range-max")
 
+            _LOGGER.debug(
+                "Adding thermostat '%s' with initial mode '%s', current temp %s, target temp %s",
+                thermo_device_id,
+                heating_mode,
+                current_temperature,
+                target_temperature,
+            )
             entities.append(
                 JablotronClimate(
                     coordinator,
@@ -125,10 +134,18 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
                 _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
                 return
 
+            _LOGGER.debug(
+                "Setting HVAC mode '%s' (heating_mode='%s') for device '%s' (service %d)",
+                hvac_mode,
+                heating_mode,
+                self._thermo_device_id,
+                self._service_id,
+            )
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
 
             # When turning on from OFF/STAND_BY, wake the device first before setting the actual mode
             if self._attr_hvac_mode == HVACMode.OFF and hvac_mode != HVACMode.OFF:
+                _LOGGER.debug("Waking thermo device '%s' before mode change", self._thermo_device_id)
                 wake_success = await self.hass.async_add_executor_job(
                     partial(
                         bridge.control_thermo_device,
@@ -174,6 +191,12 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
             return
 
         try:
+            _LOGGER.debug(
+                "Setting temperature %.1f for device '%s' (service %d)",
+                temperature,
+                self._thermo_device_id,
+                self._service_id,
+            )
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
             success = await self.hass.async_add_executor_job(
                 partial(
@@ -231,9 +254,17 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
         self._attr_target_temperature = state.get("temperature-set")
 
         heating_mode = state.get("mode", "OFF")
-        self._attr_hvac_mode = THERMO_STATE_TO_HVAC_MODE.get(heating_mode, HVACMode.OFF)
-
         heating_state = state.get("heating-state", "HEATING_OFF")
+        _LOGGER.debug(
+            "Device '%s' received mode '%s', heating-state '%s', current temp %s, target temp %s",
+            self._thermo_device_id,
+            heating_mode,
+            heating_state,
+            self._attr_current_temperature,
+            self._attr_target_temperature,
+        )
+
+        self._attr_hvac_mode = THERMO_STATE_TO_HVAC_MODE.get(heating_mode, HVACMode.OFF)
         if self._attr_hvac_mode == HVACMode.OFF:
             self._attr_hvac_action = HVACAction.OFF
         elif heating_state == "HEATING":

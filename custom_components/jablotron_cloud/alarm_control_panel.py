@@ -32,6 +32,7 @@ async def async_setup_entry(
 ) -> None:
     """Register alarm panel entity for each Jablotron service section."""
 
+    _LOGGER.debug("Adding Jablotron alarm control panel entities")
     runtime_data: JablotronData = entry.runtime_data
     coordinator = runtime_data.coordinator
     client = runtime_data.client
@@ -42,6 +43,7 @@ async def async_setup_entry(
         service_type = service_data["type"]
         service_firmware = service_data["firmware"]
 
+        _LOGGER.debug("Getting available sections for service '%s'", service_name)
         alarm = service_data["alarm"]
         for section in alarm["sections"]:
             section_name = section["name"]
@@ -55,6 +57,7 @@ async def async_setup_entry(
                 _LOGGER.debug("Section '%s' is not controllable, ignoring!", section_name)
                 continue
 
+            _LOGGER.debug("Adding controllable section '%s' with initial state '%s'", section_name, section_state)
             entities.append(
                 JablotronAlarmControlPanel(
                     coordinator,
@@ -123,6 +126,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         """Send disarm request."""
         try:
             code = self.code_or_default_code(code)
+            _LOGGER.debug("Sending disarm for section '%s' (service %d)", self._section_name, self._service_id)
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
             disarm_successful = await self.hass.async_add_executor_job(
                 partial(
@@ -146,6 +150,12 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         """Send arm request."""
         try:
             code = self.code_or_default_code(code)
+            _LOGGER.debug(
+                "Sending arm away for section '%s' (service %d, force=%s)",
+                self._section_name,
+                self._service_id,
+                self._client.force_arm,
+            )
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
             arm_successful = await self.hass.async_add_executor_job(
                 partial(
@@ -173,6 +183,12 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
 
         try:
             code = self.code_or_default_code(code)
+            _LOGGER.debug(
+                "Sending arm home for section '%s' (service %d, force=%s)",
+                self._section_name,
+                self._service_id,
+                self._client.force_arm,
+            )
             bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
             arm_successful = await self.hass.async_add_executor_job(
                 partial(
@@ -211,5 +227,6 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
             _LOGGER.warning("No state available for section '%s'!", self._section_name)
             return
 
+        _LOGGER.debug("Section '%s' received state '%s'", self._section_name, section_state)
         self._attr_alarm_state = section_state_to_alarm_state(section_state)
         self.async_write_ha_state()
