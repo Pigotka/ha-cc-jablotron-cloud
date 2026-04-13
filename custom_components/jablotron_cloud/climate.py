@@ -2,26 +2,22 @@
 
 from __future__ import annotations
 
-import logging
 from functools import partial
+import logging
 from typing import Any
 
-from homeassistant.components.climate import (
-    ClimateEntity,
-    ClimateEntityFeature,
-    HVACAction,
-    HVACMode,
-)
+from jablotronpy import UnauthorizedException
+
+from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACAction, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from jablotronpy import JablotronThermoDevice, UnauthorizedException
 
-from . import JablotronConfigEntry, JablotronData, JablotronDataCoordinator, JablotronClient
-from .const import DOMAIN, THERMO_STATE_TO_HVAC_MODE, HVAC_MODE_TO_THERMO_STATE
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
+from .const import DOMAIN, HVAC_MODE_TO_THERMO_STATE, THERMO_STATE_TO_HVAC_MODE
+from .entity import JablotronEntity
+from .utils import get_thermo_device
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,25 +25,24 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: JablotronConfigEntry,
-    async_add_entities: AddEntitiesCallback
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Register climate entity for each Jablotron service thermo device."""
 
+    _LOGGER.debug("Adding Jablotron climate entities")
     runtime_data: JablotronData = entry.runtime_data
     coordinator = runtime_data.coordinator
     client = runtime_data.client
 
-    # Get thermo devices for each service
     entities: list[JablotronClimate] = []
     for service_id, service_data in client.services.items():
-        # Get service details
         service_name = service_data["name"]
         service_type = service_data["type"]
         service_firmware = service_data["firmware"]
 
+        _LOGGER.debug("Getting available thermo devices for service '%s'", service_name)
         thermo_devices = service_data["thermo"]
         for thermo_device in thermo_devices:
-            # Get thermo device details
             thermo_device_id = thermo_device["object-device-id"]
             thermo_state = thermo_device.get("thermo-device", {})
             state = thermo_device.get("state", {})
@@ -56,18 +51,21 @@ async def async_setup_entry(
             if not thermo_state.get("can-control", False):
                 continue
 
-            # Get temperature values
             current_temperature = thermo_device.get("temperature")
             target_temperature = state.get("temperature-set")
             heating_mode = state.get("mode", "OFF")
-
-            # Get temperature limits from thermo device settings
             min_temp = thermo_state.get("temperature-range-min")
             max_temp = thermo_state.get("temperature-range-max")
 
+            _LOGGER.debug(
+                "Adding thermostat '%s' with initial mode '%s', current temp %s, target temp %s",
+                thermo_device_id,
+                heating_mode,
+                current_temperature,
+                target_temperature,
+            )
             entities.append(
                 JablotronClimate(
-                    hass,
                     coordinator,
                     client,
                     service_id,
@@ -79,22 +77,19 @@ async def async_setup_entry(
                     target_temperature,
                     heating_mode,
                     min_temp,
-                    max_temp
+                    max_temp,
                 )
             )
 
     async_add_entities(entities)
 
 
-class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntity):
+class JablotronClimate(JablotronEntity, ClimateEntity):
     """Representation of Jablotron Cloud climate entity."""
 
-    _attr_has_entity_name = True
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
-        ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-        | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TARGET_TEMPERATURE
     )
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT, HVACMode.AUTO]
     _enable_turn_on_off_backwards_compat = False
@@ -102,7 +97,6 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
 
     def __init__(
         self,
-        hass: HomeAssistant,
         coordinator: JablotronDataCoordinator,
         client: JablotronClient,
         service_id: int,
@@ -117,15 +111,7 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
         max_temp: float | None = None,
     ) -> None:
         """Initialize Jablotron climate entity."""
-
-        self._hass = hass
-        self._client = client
-        self._service_id = service_id
-        self._service_name = service_name
-        self._service_type = service_type
-        self._service_firmware = service_firmware
         self._thermo_device_id = thermo_device_id
-
         self._attr_name = f"{thermo_device_id}_climate"
         self._attr_unique_id = f"{service_id}_{thermo_device_id}_climate"
         self._attr_current_temperature = current_temperature
@@ -138,53 +124,48 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
         if max_temp is not None:
             self._attr_max_temp = max_temp
 
-        super().__init__(coordinator)
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return information about device."""
-
-        return DeviceInfo(
-            identifiers={(DOMAIN, str(self._service_id))},
-            name=self._service_name,
-            manufacturer="Jablotron",
-            model=self._service_type,
-            sw_version=self._service_firmware
-        )
+        super().__init__(coordinator, client, service_id, service_name, service_type, service_firmware)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
-
         try:
             heating_mode = HVAC_MODE_TO_THERMO_STATE.get(hvac_mode)
             if heating_mode is None:
                 _LOGGER.warning("Unsupported HVAC mode: %s", hvac_mode)
                 return
 
-            bridge = await self._hass.async_add_executor_job(self._client.get_bridge)
+            _LOGGER.debug(
+                "Setting HVAC mode '%s' (heating_mode='%s') for device '%s' (service %d)",
+                hvac_mode,
+                heating_mode,
+                self._thermo_device_id,
+                self._service_id,
+            )
+            bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
 
             # When turning on from OFF/STAND_BY, wake the device first before setting the actual mode
             if self._attr_hvac_mode == HVACMode.OFF and hvac_mode != HVACMode.OFF:
-                wake_success = await self._hass.async_add_executor_job(
+                _LOGGER.debug("Waking thermo device '%s' before mode change", self._thermo_device_id)
+                wake_success = await self.hass.async_add_executor_job(
                     partial(
                         bridge.control_thermo_device,
                         service_id=self._service_id,
                         object_device_id=self._thermo_device_id,
                         heating_mode="ON",
-                        service_type=self._service_type
+                        service_type=self._service_type,
                     )
                 )
                 if not wake_success:
                     _LOGGER.error("Failed to wake thermo device '%s'", self._thermo_device_id)
                     return
 
-            success = await self._hass.async_add_executor_job(
+            success = await self.hass.async_add_executor_job(
                 partial(
                     bridge.control_thermo_device,
                     service_id=self._service_id,
                     object_device_id=self._thermo_device_id,
                     heating_mode=heating_mode,
-                    service_type=self._service_type
+                    service_type=self._service_type,
                 )
             )
 
@@ -196,29 +177,34 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except Exception as ex:
-            _LOGGER.exception("Failed to control thermo device '%s': %s", self._thermo_device_id, ex)
+            _LOGGER.exception("Failed to control thermo device '%s'", self._thermo_device_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="control_failed"
+                translation_key="control_failed",
             ) from ex
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-
         temperature = kwargs.get(ATTR_TEMPERATURE)
         if temperature is None:
             _LOGGER.warning("No temperature provided for set_temperature")
             return
 
         try:
-            bridge = await self._hass.async_add_executor_job(self._client.get_bridge)
-            success = await self._hass.async_add_executor_job(
+            _LOGGER.debug(
+                "Setting temperature %.1f for device '%s' (service %d)",
+                temperature,
+                self._thermo_device_id,
+                self._service_id,
+            )
+            bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
+            success = await self.hass.async_add_executor_job(
                 partial(
                     bridge.control_thermo_device,
                     service_id=self._service_id,
                     object_device_id=self._thermo_device_id,
                     temperature=temperature,
-                    service_type=self._service_type
+                    service_type=self._service_type,
                 )
             )
 
@@ -230,10 +216,10 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except Exception as ex:
-            _LOGGER.exception("Failed to set temperature for thermo device '%s': %s", self._thermo_device_id, ex)
+            _LOGGER.exception("Failed to set temperature for thermo device '%s'", self._thermo_device_id)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="control_failed"
+                translation_key="control_failed",
             ) from ex
 
     async def async_turn_on(self) -> None:
@@ -247,42 +233,38 @@ class JablotronClimate(CoordinatorEntity[JablotronDataCoordinator], ClimateEntit
     @callback
     def _handle_coordinator_update(self) -> None:
         """Process data retrieved by coordinator."""
-
         service = self._client.services.get(self._service_id, None)
         if not service:
             _LOGGER.error("No data available for service '%d'!", self._service_id)
             return
 
-        # Get service devices
         thermo_devices = service["thermo"]
         if not thermo_devices:
             _LOGGER.warning("No thermo devices available for service '%d'!", self._service_id)
             return
 
-        # Get device
-        thermo_device: JablotronThermoDevice | None = next(
-            filter(lambda device: device["object-device-id"] == self._thermo_device_id, thermo_devices),
-            None
-        )
+        thermo_device = get_thermo_device(self._thermo_device_id, thermo_devices)
         if not thermo_device:
             _LOGGER.warning("No thermo device found with id '%s'!", self._thermo_device_id)
             return
 
-        # Update current temperature
         self._attr_current_temperature = thermo_device.get("temperature")
 
-        # Get state data
         state = thermo_device.get("state", {})
-
-        # Update target temperature from state
         self._attr_target_temperature = state.get("temperature-set")
 
-        # Update HVAC mode from state mode
         heating_mode = state.get("mode", "OFF")
-        self._attr_hvac_mode = THERMO_STATE_TO_HVAC_MODE.get(heating_mode, HVACMode.OFF)
-
-        # Check if heating is active
         heating_state = state.get("heating-state", "HEATING_OFF")
+        _LOGGER.debug(
+            "Device '%s' received mode '%s', heating-state '%s', current temp %s, target temp %s",
+            self._thermo_device_id,
+            heating_mode,
+            heating_state,
+            self._attr_current_temperature,
+            self._attr_target_temperature,
+        )
+
+        self._attr_hvac_mode = THERMO_STATE_TO_HVAC_MODE.get(heating_mode, HVACMode.OFF)
         if self._attr_hvac_mode == HVACMode.OFF:
             self._attr_hvac_action = HVACAction.OFF
         elif heating_state == "HEATING":
