@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JablotronConfigEntry, JablotronData
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .entity import JablotronEntity
 from .utils import get_component_state, pg_state_to_binary_state
 
@@ -68,8 +68,8 @@ class JablotronProgrammableGate(JablotronEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator,
-        client,
+        coordinator: JablotronDataCoordinator,
+        client: JablotronClient,
         service_id: int,
         service_name: str,
         service_type: str,

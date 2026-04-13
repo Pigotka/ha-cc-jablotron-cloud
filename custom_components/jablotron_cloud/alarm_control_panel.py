@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JablotronConfigEntry, JablotronData
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN
 from .entity import JablotronEntity
 from .utils import get_component_state, section_state_to_alarm_state
@@ -79,8 +79,8 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
 
     def __init__(
         self,
-        coordinator,
-        client,
+        coordinator: JablotronDataCoordinator,
+        client: JablotronClient,
         service_id: int,
         service_name: str,
         service_type: str,

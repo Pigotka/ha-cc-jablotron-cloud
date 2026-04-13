@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JablotronConfigEntry, JablotronData
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN, HVAC_MODE_TO_THERMO_STATE, THERMO_STATE_TO_HVAC_MODE
 from .entity import JablotronEntity
 from .utils import get_thermo_device
@@ -88,8 +88,8 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator,
-        client,
+        coordinator: JablotronDataCoordinator,
+        client: JablotronClient,
         service_id: int,
         service_name: str,
         service_type: str,

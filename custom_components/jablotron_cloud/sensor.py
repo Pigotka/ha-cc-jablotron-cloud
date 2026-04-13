@@ -9,7 +9,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JablotronConfigEntry, JablotronData
+from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .entity import JablotronEntity
 from .utils import get_thermo_device
 
@@ -67,8 +67,8 @@ class JablotronSensor(JablotronEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator,
-        client,
+        coordinator: JablotronDataCoordinator,
+        client: JablotronClient,
         service_id: int,
         service_name: str,
         service_type: str,
