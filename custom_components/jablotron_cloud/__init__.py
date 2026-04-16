@@ -246,6 +246,3 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     )
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
-        except TimeoutError:
-            # Warn that timeout occurred that will cause data to not be up-to-date
-            _LOGGER.warning("Timeout while updating data for available services, data may be out of date!")
