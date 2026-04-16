@@ -102,6 +102,10 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         self._supports_partial_arm = partial_arm_enabled
         self._authorization_required = requires_authorization
         self._attr_alarm_state = current_state
+        # Set supported features once during initialization
+        self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
+        if partial_arm_enabled:
+            self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
         super().__init__(coordinator, client, service_id, service_name, service_type, service_firmware)
 
     @property
@@ -113,14 +117,6 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
     def code_arm_required(self) -> bool:
         """Whether code is required for arm actions."""
         return self._authorization_required
-
-    @property
-    def supported_features(self) -> AlarmControlPanelEntityFeature:
-        """Return list of supported features."""
-        supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
-        if self._supports_partial_arm:
-            supported_features |= AlarmControlPanelEntityFeature.ARM_HOME
-        return supported_features
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm request."""
