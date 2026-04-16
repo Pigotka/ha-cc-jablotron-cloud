@@ -134,3 +134,7 @@ dmypy.json
 
 # Ruff
 .ruff_cache/
+
+# Claude Code
+.claude/
+*.local.*
