@@ -28,8 +28,9 @@ ecosystem:
 |-----------------------|-----------------------------------------------------------------|
 | `alarm_control_panel` | Used for monitoring and controlling alarm sections              |
 | `binary_sensor`       | Used for monitoring **UN**controllable programmable gates (PGs) |
+| `climate`             | Used for controlling thermo devices (thermostats)               |
 | `switch`              | Used for controlling programmable gates (PGs)                   |
-| `sensor`              | Used for monitoring temperature sensors                         |
+| `sensor`              | Used for monitoring temperature sensors and non-controllable section states |
 
 ## HACS Installation
 

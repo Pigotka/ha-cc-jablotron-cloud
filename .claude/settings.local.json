@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:developers.home-assistant.io)",
+      "Bash(ruff check:*)",
+      "Bash(python -m ruff check custom_components/jablotron_cloud/)",
+      "Bash(uv run:*)",
+      "Bash(py -3 -m pip install ruff -q)",
+      "Bash(py -3 -m ruff check d:/tmp/ha-cc-jablotron-cloud/custom_components/jablotron_cloud/)",
+      "Bash(py:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo:*)",
+      "Bash(git -C \"D:/tmp/ha-cc-jablotron-cloud\" show d1166cf:custom_components/jablotron_cloud/alarm_control_panel.py)",
+      "Bash(python:*)",
+      "Bash(git -C \"D:/tmp/ha-cc-jablotron-cloud\" show 27db601:custom_components/jablotron_cloud/alarm_control_panel.py)",
+      "Bash(wait)",
+      "Read(//d/tmp/**)",
+      "Bash(gh pr:*)",
+      "Bash(git log:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:patch-diff.githubusercontent.com)",
+      "Bash(grep -n \"translation_key\\\\|_attr_name\" /d/tmp/ha-cc-jablotron-cloud/custom_components/jablotron_cloud/*.py)",
+      "Bash(grep -n \"entity_category\" custom_components/jablotron_cloud/*.py)",
+      "Bash(grep -n \"\\\\.get\\(self\\\\._service_id\\)\" /d/tmp/ha-cc-jablotron-cloud/custom_components/jablotron_cloud/*.py)",
+      "WebSearch",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(git branch:*)",
+      "Read(//tmp/**)"
+    ]
+  }
+}
