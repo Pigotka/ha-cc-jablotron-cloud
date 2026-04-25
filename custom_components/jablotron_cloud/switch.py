@@ -6,7 +6,12 @@ from functools import partial
 import logging
 from typing import Any
 
-from jablotronpy import BadRequestException, IncorrectPinCodeException, JablotronProgrammableGatesGate, UnauthorizedException
+from jablotronpy import (
+    BadRequestException,
+    IncorrectPinCodeException,
+    JablotronProgrammableGatesGate,
+    UnauthorizedException,
+)
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -107,7 +112,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
                     service_type=self._service_type,
                     component_id=self._gate_id,
                     state="ON",
-                    pin_code=self._client._default_pin,
+                    pin_code=self._client.get_default_pin(),
                 )
             )
             if turn_on_successful:
@@ -132,7 +137,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
                     service_type=self._service_type,
                     component_id=self._gate_id,
                     state="OFF",
-                    pin_code=self._client._default_pin,
+                    pin_code=self._client.get_default_pin(),
                 )
             )
             if turn_off_successful:

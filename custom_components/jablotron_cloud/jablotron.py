@@ -31,3 +31,8 @@ class JablotronClient:
         bridge.perform_login()
 
         return bridge
+
+    def get_default_pin(self) -> str | None:
+        """Return the default PIN code."""
+
+        return self._default_pin
