@@ -49,6 +49,9 @@
         },
         "control_failed": {
             "message": "Nepodarilo sa ovládať termo zariadenie!"
+        },
+        "switch_control_failed": {
+            "message": "Nepodarilo sa ovládať programovateľnú bránu!"
         }
     }
 }

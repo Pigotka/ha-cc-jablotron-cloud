@@ -49,6 +49,9 @@
         },
         "control_failed": {
             "message": "Failed to control thermo device!"
+        },
+        "switch_control_failed": {
+            "message": "Failed to control programmable gate!"
         }
     }
 }

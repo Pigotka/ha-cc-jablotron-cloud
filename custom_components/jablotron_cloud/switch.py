@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from jablotronpy import IncorrectPinCodeException, JablotronProgrammableGatesGate, UnauthorizedException
+from jablotronpy import BadRequestException, IncorrectPinCodeException, JablotronProgrammableGatesGate, UnauthorizedException
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
@@ -107,6 +107,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
                     service_type=self._service_type,
                     component_id=self._gate_id,
                     state="ON",
+                    pin_code=self._client._default_pin,
                 )
             )
             if turn_on_successful:
@@ -116,6 +117,8 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
+        except BadRequestException as ex:
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="switch_control_failed") from ex
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send turn off request."""
@@ -129,6 +132,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
                     service_type=self._service_type,
                     component_id=self._gate_id,
                     state="OFF",
+                    pin_code=self._client._default_pin,
                 )
             )
             if turn_off_successful:
@@ -138,6 +142,8 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
+        except BadRequestException as ex:
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="switch_control_failed") from ex
 
     @callback
     def _handle_coordinator_update(self) -> None:
