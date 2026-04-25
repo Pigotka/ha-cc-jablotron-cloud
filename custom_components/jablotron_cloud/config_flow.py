@@ -44,13 +44,13 @@ async def handle_configuration(
 
     # Open configuration dialog
     if user_input is None:
-        return self.async_show_form(  # type: ignore
+        return self.async_show_form(  # type: ignore[return-value]
             step_id=step_id, data_schema=get_schema(config_entry_data)
         )
 
     # Validate interval value
     if user_input[CONF_SCAN_INTERVAL] < 30:
-        return self.async_show_form(  # type: ignore
+        return self.async_show_form(  # type: ignore[return-value]
             step_id=step_id,
             data_schema=get_schema(user_input),
             errors={"base": "interval_too_short"},
@@ -58,7 +58,7 @@ async def handle_configuration(
 
     # Validate timeout value
     if user_input[CONF_TIMEOUT] < 10:
-        return self.async_show_form(  # type: ignore
+        return self.async_show_form(  # type: ignore[return-value]
             step_id=step_id,
             data_schema=get_schema(user_input),
             errors={"base": "timeout_too_low"},
@@ -69,7 +69,7 @@ async def handle_configuration(
         _LOGGER.debug("Validating Jablotron Cloud credentials")
         await self.hass.async_add_executor_job(validate_credentials, user_input)
     except UnauthorizedException:
-        return self.async_show_form(  # type: ignore
+        return self.async_show_form(  # type: ignore[return-value]
             step_id=step_id,
             data_schema=get_schema(user_input),
             errors={"base": "invalid_auth"},
@@ -100,8 +100,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Save configuration or reopen configuration dialog
         if flow_result is None:
             _LOGGER.info("Jablotron Cloud integration successfully configured")
-            return self.async_create_entry(title="Jablotron Cloud", data=user_input)  # type: ignore
-        return flow_result  # type: ignore
+            return self.async_create_entry(title="Jablotron Cloud", data=user_input)  # type: ignore[return-value]
+        return flow_result  # type: ignore[return-value]
 
     async def async_step_reconfigure(self, user_input: dict | None = None) -> ConfigFlowResult:
         """User flow to reconfigure Jablotron Cloud integration."""
@@ -115,17 +115,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Save configuration or reopen configuration dialog
         if flow_result is None:
             _LOGGER.info("Jablotron Cloud integration successfully reconfigured")
-            return self.async_update_reload_and_abort(  # type: ignore
+            return self.async_update_reload_and_abort(  # type: ignore[return-value]
                 config_entry,
                 unique_id=config_entry.unique_id,
                 data={**config_entry.data, **user_input},
             )
-        return flow_result  # type: ignore
+        return flow_result  # type: ignore[return-value]
 
     async def async_step_reauth(self, entry_data: dict | None = None) -> ConfigFlowResult:
         """Handler for API authentication errors."""
 
-        return await self.async_step_reauth_confirm()  # type: ignore
+        return await self.async_step_reauth_confirm()  # type: ignore[return-value]
 
     async def async_step_reauth_confirm(self, user_input: dict | None = None) -> ConfigFlowResult:
         """User flow to update credentials for Jablotron Cloud integration."""
@@ -139,9 +139,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Save configuration or reopen configuration dialog
         if flow_result is None:
             _LOGGER.info("Jablotron Cloud integration successfully reconfigured")
-            return self.async_update_reload_and_abort(  # type: ignore
+            return self.async_update_reload_and_abort(  # type: ignore[return-value]
                 config_entry,
                 unique_id=config_entry.unique_id,
                 data={**config_entry.data, **user_input},
             )
-        return flow_result  # type: ignore
+        return flow_result  # type: ignore[return-value]

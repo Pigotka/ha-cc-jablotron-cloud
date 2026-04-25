@@ -6,6 +6,8 @@ from jablotronpy import JablotronProgrammableGates, JablotronSections, Jablotron
 
 
 class JablotronServiceData(TypedDict):
+    """Typed dictionary representing data for a single Jablotron service."""
+
     name: str
     type: str
     firmware: str
