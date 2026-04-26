@@ -115,3 +115,7 @@ Example automation that fires whenever any alarm panel is triggered:
   with a redacted log sample if you observe this.
 * **Historical events are not used.** The cloud-side event history endpoint (`eventHistoryGet`) returns
   `400 METHOD.NOT-SUPPORTED` on several panel models (e.g. JA100F), so it is not relied on as a fallback.
+
+# Support
+
+![Buy me a coffee QR](https://github.com/Pigotka/ha-cc-jablotron-cloud/blob/main/bmc_qr.png)
