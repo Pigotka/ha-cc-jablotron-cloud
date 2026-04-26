@@ -108,7 +108,7 @@ Example automation that fires whenever any alarm panel is triggered:
 * **Polling-based detection.** The Jablotron Cloud API does not push notifications. The integration only
   knows about an alarm while the cloud response still contains the active event. If the alarm is silenced
   before the next poll, the trigger is missed. For time-critical automations consider lowering the
-  `Frequency of polling` setting (minimum 5 seconds).
+  `Frequency of polling` setting (minimum 30 seconds).
 * **Message format dependency.** Section identification relies on the message ending with
   `, Section <name>` where `<name>` matches the configured section name exactly. If your panel firmware
   emits ALARM events without that suffix, the entity will not flip to `triggered`. Please open an issue
