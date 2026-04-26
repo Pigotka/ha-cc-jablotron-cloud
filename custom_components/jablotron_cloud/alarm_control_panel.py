@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from functools import partial
 import logging
-from typing import Any
 
 from jablotronpy import IncorrectPinCodeException, UnauthorizedException
 
@@ -106,6 +105,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         self._supports_partial_arm = partial_arm_enabled
         self._authorization_required = requires_authorization
         self._attr_alarm_state = current_state
+        self._attr_extra_state_attributes = None
         # Set supported features once during initialization
         self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
         if partial_arm_enabled:
@@ -209,23 +209,6 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
 
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Expose the matching alarm event details while this section is triggered."""
-        service = self._client.services.get(self._service_id)
-        if not service:
-            return None
-
-        event = find_section_alarm_event(service["alarm"], self._section_name)
-        if event is None:
-            return None
-
-        return {
-            "last_alarm_date": event.get("date"),
-            "last_alarm_message": event.get("message"),
-            "last_alarm_type": event.get("type"),
-        }
-
     @callback
     def _handle_coordinator_update(self) -> None:
         """Process data retrieved by coordinator."""
@@ -239,8 +222,15 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         if event is not None:
             _LOGGER.debug("Section '%s' triggered: %s", self._section_name, event.get("message"))
             self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
+            self._attr_extra_state_attributes = {
+                "last_alarm_date": event.get("date"),
+                "last_alarm_message": event.get("message"),
+                "last_alarm_type": event.get("type"),
+            }
             self.async_write_ha_state()
             return
+
+        self._attr_extra_state_attributes = None
 
         service_states = alarm["states"]
         if not service_states:
