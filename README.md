@@ -26,7 +26,7 @@ ecosystem:
 
 | Entity type           | Description                                                     |
 |-----------------------|-----------------------------------------------------------------|
-| `alarm_control_panel` | Used for monitoring and controlling alarm sections              |
+| `alarm_control_panel` | Used for monitoring and controlling alarm sections (including `triggered` state when an alarm is active) |
 | `binary_sensor`       | Used for monitoring **UN**controllable programmable gates (PGs) |
 | `climate`             | Used for controlling thermo devices (thermostats)               |
 | `switch`              | Used for controlling programmable gates (PGs)                   |
@@ -71,6 +71,47 @@ The integration allows you to modify the following parameters:
 * Frequency of polling data from Jablotron Cloud
 * Timeout for polling data from Jablotron Cloud
 
-## Missing functionality
+## Alarm event detection
 
-* Integration does not listen for active alarms **- this is limitation of Jablotron Cloud API**
+The integration surfaces an active alarm by flipping the affected `alarm_control_panel` entity to the
+`triggered` state. Detection is **per section** — when an alarm is in progress, the Jablotron Cloud API
+returns an event with a message such as `"Alarm - Periphery PIR chodba (wifi), Section Dům"`. The
+integration parses the section name from the substring after the `, Section ` token and only the matching
+section is reported as `triggered`. Other sections of the same service stay in their previous state.
+
+While a section is `triggered`, its entity exposes the following extra attributes describing the latest
+matching event:
+
+| Attribute            | Description                                                          |
+|----------------------|----------------------------------------------------------------------|
+| `last_alarm_type`    | Event type as reported by the cloud (currently always `ALARM`)       |
+| `last_alarm_message` | Human-readable description, e.g. detector and section that triggered |
+| `last_alarm_date`    | ISO 8601 timestamp when the event was raised                         |
+
+Example automation that fires whenever any alarm panel is triggered:
+
+```yaml
+- alias: Jablotron alarm triggered
+  trigger:
+    - platform: state
+      entity_id: alarm_control_panel.dum
+      to: "triggered"
+  action:
+    - service: notify.mobile_app
+      data:
+        title: "Alarm!"
+        message: "{{ state_attr(trigger.entity_id, 'last_alarm_message') }}"
+```
+
+### Caveats
+
+* **Polling-based detection.** The Jablotron Cloud API does not push notifications. The integration only
+  knows about an alarm while the cloud response still contains the active event. If the alarm is silenced
+  before the next poll, the trigger is missed. For time-critical automations consider lowering the
+  `Frequency of polling` setting (minimum 5 seconds).
+* **Message format dependency.** Section identification relies on the message ending with
+  `, Section <name>` where `<name>` matches the configured section name exactly. If your panel firmware
+  emits ALARM events without that suffix, the entity will not flip to `triggered`. Please open an issue
+  with a redacted log sample if you observe this.
+* **Historical events are not used.** The cloud-side event history endpoint (`eventHistoryGet`) returns
+  `400 METHOD.NOT-SUPPORTED` on several panel models (e.g. JA100F), so it is not relied on as a fallback.

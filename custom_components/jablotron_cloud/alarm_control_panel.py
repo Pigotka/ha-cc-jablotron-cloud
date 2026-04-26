@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 import logging
+from typing import Any
 
 from jablotronpy import IncorrectPinCodeException, UnauthorizedException
 
@@ -20,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN
 from .entity import JablotronEntity
-from .utils import get_component_state, section_state_to_alarm_state
+from .utils import find_section_alarm_event, get_component_state, section_state_to_alarm_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,14 +51,17 @@ async def async_setup_entry(
             section_id = section["cloud-component-id"]
             partial_arm_enabled = section["partial-arm-enabled"]
             requires_authorization = section["need-authorization"]
-            section_state = get_component_state(section_id, alarm["states"])
-            current_state = section_state_to_alarm_state(section_state)
-
             if not section["can-control"]:
                 _LOGGER.debug("Section '%s' is not controllable, ignoring!", section_name)
                 continue
 
-            _LOGGER.debug("Adding controllable section '%s' with initial state '%s'", section_name, section_state)
+            if find_section_alarm_event(alarm, section_name) is not None:
+                current_state = AlarmControlPanelState.TRIGGERED
+            else:
+                section_state = get_component_state(section_id, alarm["states"])
+                current_state = section_state_to_alarm_state(section_state)
+
+            _LOGGER.debug("Adding controllable section '%s' with initial state '%s'", section_name, current_state)
             entities.append(
                 JablotronAlarmControlPanel(
                     coordinator,
@@ -205,6 +209,23 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
 
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Expose the matching alarm event details while this section is triggered."""
+        service = self._client.services.get(self._service_id)
+        if not service:
+            return None
+
+        event = find_section_alarm_event(service["alarm"], self._section_name)
+        if event is None:
+            return None
+
+        return {
+            "last_alarm_date": event.get("date"),
+            "last_alarm_message": event.get("message"),
+            "last_alarm_type": event.get("type"),
+        }
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Process data retrieved by coordinator."""
@@ -213,7 +234,15 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
             _LOGGER.error("No data available for service '%d'!", self._service_id)
             return
 
-        service_states = service["alarm"]["states"]
+        alarm = service["alarm"]
+        event = find_section_alarm_event(alarm, self._section_name)
+        if event is not None:
+            _LOGGER.debug("Section '%s' triggered: %s", self._section_name, event.get("message"))
+            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
+            self.async_write_ha_state()
+            return
+
+        service_states = alarm["states"]
         if not service_states:
             _LOGGER.warning("No states data available for service '%d'!", self._service_id)
             return
