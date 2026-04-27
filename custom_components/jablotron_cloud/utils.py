@@ -2,16 +2,23 @@
 
 import logging
 
-from jablotronpy import JablotronProgrammableGatesState, JablotronSectionsState, JablotronThermoDevice
+from jablotronpy import (
+    JablotronProgrammableGatesState,
+    JablotronSections,
+    JablotronSectionsState,
+    JablotronThermoDevice,
+)
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import callback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
-from .const import PG_STATE_AS_BINARY_STATE, SECTION_STATE_AS_ALARM_STATE
+from .const import ALARM_EVENT_TYPE, PG_STATE_AS_BINARY_STATE, SECTION_STATE_AS_ALARM_STATE
 
 _LOGGER = logging.getLogger(__name__)
+
+SECTION_TOKEN = ", Section "
 
 
 @callback
@@ -54,6 +61,29 @@ def pg_state_to_binary_state(state: str | None) -> bool:
     """Convert programmable gate state to boolean value."""
 
     return PG_STATE_AS_BINARY_STATE.get(state, False)
+
+
+def get_service_alarm_events(alarm: JablotronSections) -> list[dict]:
+    """Return active service-level events from sections payload, or empty list."""
+
+    return alarm.get("service-states", {}).get("events", []) or []
+
+
+def find_section_alarm_event(alarm: JablotronSections, section_name: str) -> dict | None:
+    """Return the most recent ALARM event whose message references the given section, or None.
+
+    The Jablotron event message format is 'Alarm - <detector>, Section <section name>'.
+    The section is identified by the substring after the literal ', Section ' token.
+    """
+
+    matches = [
+        event
+        for event in get_service_alarm_events(alarm)
+        if event.get("type") == ALARM_EVENT_TYPE
+        and event.get("message", "").rsplit(SECTION_TOKEN, 1)[-1].strip() == section_name
+    ]
+
+    return matches[-1] if matches else None
 
 
 def get_thermo_device(

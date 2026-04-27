@@ -20,7 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
 from .const import DOMAIN
 from .entity import JablotronEntity
-from .utils import get_component_state, section_state_to_alarm_state
+from .utils import find_section_alarm_event, get_component_state, section_state_to_alarm_state
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,14 +50,17 @@ async def async_setup_entry(
             section_id = section["cloud-component-id"]
             partial_arm_enabled = section["partial-arm-enabled"]
             requires_authorization = section["need-authorization"]
-            section_state = get_component_state(section_id, alarm["states"])
-            current_state = section_state_to_alarm_state(section_state)
-
             if not section["can-control"]:
                 _LOGGER.debug("Section '%s' is not controllable, ignoring!", section_name)
                 continue
 
-            _LOGGER.debug("Adding controllable section '%s' with initial state '%s'", section_name, section_state)
+            if find_section_alarm_event(alarm, section_name) is not None:
+                current_state = AlarmControlPanelState.TRIGGERED
+            else:
+                section_state = get_component_state(section_id, alarm["states"])
+                current_state = section_state_to_alarm_state(section_state)
+
+            _LOGGER.debug("Adding controllable section '%s' with initial state '%s'", section_name, current_state)
             entities.append(
                 JablotronAlarmControlPanel(
                     coordinator,
@@ -102,6 +105,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         self._supports_partial_arm = partial_arm_enabled
         self._authorization_required = requires_authorization
         self._attr_alarm_state = current_state
+        self._attr_extra_state_attributes = None
         # Set supported features once during initialization
         self._attr_supported_features = AlarmControlPanelEntityFeature.ARM_AWAY
         if partial_arm_enabled:
@@ -213,7 +217,22 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
             _LOGGER.error("No data available for service '%d'!", self._service_id)
             return
 
-        service_states = service["alarm"]["states"]
+        alarm = service["alarm"]
+        event = find_section_alarm_event(alarm, self._section_name)
+        if event is not None:
+            _LOGGER.debug("Section '%s' triggered: %s", self._section_name, event.get("message"))
+            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
+            self._attr_extra_state_attributes = {
+                "last_alarm_date": event.get("date"),
+                "last_alarm_message": event.get("message"),
+                "last_alarm_type": event.get("type"),
+            }
+            self.async_write_ha_state()
+            return
+
+        self._attr_extra_state_attributes = None
+
+        service_states = alarm["states"]
         if not service_states:
             _LOGGER.warning("No states data available for service '%d'!", self._service_id)
             return

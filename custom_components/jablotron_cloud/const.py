@@ -5,6 +5,7 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.const import Platform
 
 # Integration constants
+ALARM_EVENT_TYPE = "ALARM"
 DOMAIN = "jablotron_cloud"
 UNSUPPORTED_SERVICES = ["FUTURA2", "AMBIENTA", "VOLTA", "LOGBOOK"]
 PLATFORMS: list[Platform] = [
