@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from asyncio import timeout
 from functools import partial
 import logging
 
@@ -127,20 +128,23 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         try:
             code = self.code_or_default_code(code)
             _LOGGER.debug("Sending disarm for section '%s' (service %d)", self._section_name, self._service_id)
-            bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
-            disarm_successful = await self.hass.async_add_executor_job(
-                partial(
-                    bridge.control_section,
-                    service_id=self._service_id,
-                    service_type=self._service_type,
-                    component_id=self._section_id,
-                    state="DISARM",
-                    pin_code=code,
+            async with timeout(self.coordinator.scan_timeout):
+                bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
+                disarm_successful = await self.hass.async_add_executor_job(
+                    partial(
+                        bridge.control_section,
+                        service_id=self._service_id,
+                        service_type=self._service_type,
+                        component_id=self._section_id,
+                        state="DISARM",
+                        pin_code=code,
+                    )
                 )
-            )
             if disarm_successful:
                 self._attr_alarm_state = AlarmControlPanelState.DISARMING
                 self.async_write_ha_state()
+        except TimeoutError as ex:
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="action_timeout") from ex
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
@@ -156,21 +160,24 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                 self._service_id,
                 self._client.force_arm,
             )
-            bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
-            arm_successful = await self.hass.async_add_executor_job(
-                partial(
-                    bridge.control_section,
-                    service_id=self._service_id,
-                    service_type=self._service_type,
-                    component_id=self._section_id,
-                    state="ARM",
-                    pin_code=code,
-                    force=self._client.force_arm,
+            async with timeout(self.coordinator.scan_timeout):
+                bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
+                arm_successful = await self.hass.async_add_executor_job(
+                    partial(
+                        bridge.control_section,
+                        service_id=self._service_id,
+                        service_type=self._service_type,
+                        component_id=self._section_id,
+                        state="ARM",
+                        pin_code=code,
+                        force=self._client.force_arm,
+                    )
                 )
-            )
             if arm_successful:
                 self._attr_alarm_state = AlarmControlPanelState.ARMING
                 self.async_write_ha_state()
+        except TimeoutError as ex:
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="action_timeout") from ex
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
@@ -189,21 +196,24 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                 self._service_id,
                 self._client.force_arm,
             )
-            bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
-            arm_successful = await self.hass.async_add_executor_job(
-                partial(
-                    bridge.control_section,
-                    service_id=self._service_id,
-                    service_type=self._service_type,
-                    component_id=self._section_id,
-                    state="PARTIAL_ARM",
-                    pin_code=code,
-                    force=self._client.force_arm,
+            async with timeout(self.coordinator.scan_timeout):
+                bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
+                arm_successful = await self.hass.async_add_executor_job(
+                    partial(
+                        bridge.control_section,
+                        service_id=self._service_id,
+                        service_type=self._service_type,
+                        component_id=self._section_id,
+                        state="PARTIAL_ARM",
+                        pin_code=code,
+                        force=self._client.force_arm,
+                    )
                 )
-            )
             if arm_successful:
                 self._attr_alarm_state = AlarmControlPanelState.ARMING
                 self.async_write_ha_state()
+        except TimeoutError as ex:
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="action_timeout") from ex
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:

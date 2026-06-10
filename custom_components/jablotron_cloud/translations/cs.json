@@ -19,6 +19,9 @@
                     "force_update": "Bypassovat chyby sekcí",
                     "scan_interval": "Interval aktualizací (v sekundách)",
                     "timeout": "Časový limit aktualizace (v sekundách)"
+                },
+                "data_description": {
+                    "pin": "Ponechte prázdné pro zachování aktuálně uloženého PINu."
                 }
             },
             "reauth_confirm": {
@@ -29,6 +32,9 @@
                     "force_update": "Bypassovat chyby sekcí",
                     "scan_interval": "Interval aktualizací (v sekundách)",
                     "timeout": "Časový limit aktualizace (v sekundách)"
+                },
+                "data_description": {
+                    "pin": "Ponechte prázdné pro zachování aktuálně uloženého PINu."
                 }
             }
         },
@@ -44,6 +50,9 @@
         }
     },
     "exceptions": {
+        "action_timeout": {
+            "message": "Vypršel časový limit při odesílání příkazu do Jablotron Cloud!"
+        },
         "invalid_pin": {
             "message": "Zadaný PIN kód není platný!"
         },

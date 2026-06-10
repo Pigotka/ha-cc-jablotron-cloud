@@ -66,7 +66,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: JablotronConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:
     """Unload Jablotron Cloud integration."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # Drop cached service data so a reload starts from a clean state.
+        entry.runtime_data.client.services.clear()
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: JablotronConfigEntry) -> None:
@@ -132,7 +136,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
 
         # Define coordinator attributes
         self._client = client
-        self._scan_timeout = scan_timeout
+        self.scan_timeout = scan_timeout
 
         # Initialize data update coordinator
         super().__init__(
@@ -212,7 +216,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
 
         try:
             # Update data within a certain time limit
-            async with timeout(self._scan_timeout):
+            async with timeout(self.scan_timeout):
                 # Get fresh Jablotron Cloud session
                 _LOGGER.debug("Updating data for available Jablotron services")
                 bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)
