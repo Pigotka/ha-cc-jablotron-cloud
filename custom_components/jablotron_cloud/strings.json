@@ -19,6 +19,9 @@
                     "force_update": "[%key:common::config_flow::data::force_update%]",
                     "scan_interval": "[%key:common::config_flow::data::scan_interval%]",
                     "timeout": "[%key:common::config_flow::data::timeout%]"
+                },
+                "data_description": {
+                    "pin": "Leave empty to keep the currently stored PIN."
                 }
             },
             "reauth_confirm": {
@@ -29,6 +32,9 @@
                     "force_update": "[%key:common::config_flow::data::force_update%]",
                     "scan_interval": "[%key:common::config_flow::data::scan_interval%]",
                     "timeout": "[%key:common::config_flow::data::timeout%]"
+                },
+                "data_description": {
+                    "pin": "Leave empty to keep the currently stored PIN."
                 }
             }
         },
@@ -44,6 +50,9 @@
         }
     },
     "exceptions": {
+        "action_timeout": {
+            "message": "Timed out while sending the command to Jablotron Cloud!"
+        },
         "invalid_pin": {
             "message": "Provided pin code is not valid!"
         },

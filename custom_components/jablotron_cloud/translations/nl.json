@@ -19,6 +19,9 @@
                     "force_update": "Bypass section errors",
                     "scan_interval": "Update-interval (seconden)",
                     "timeout": "Update-time-out (seconden)"
+                },
+                "data_description": {
+                    "pin": "Laat leeg om de momenteel opgeslagen pincode te behouden."
                 }
             },
             "reauth_confirm": {
@@ -29,6 +32,9 @@
                     "force_update": "Bypass section errors",
                     "scan_interval": "Update-interval (seconden)",
                     "timeout": "Update-time-out (seconden)"
+                },
+                "data_description": {
+                    "pin": "Laat leeg om de momenteel opgeslagen pincode te behouden."
                 }
             }
         },
@@ -44,6 +50,9 @@
         }
     },
     "exceptions": {
+        "action_timeout": {
+            "message": "Time-out bij het verzenden van de opdracht naar Jablotron Cloud!"
+        },
         "invalid_pin": {
             "message": "De ingevoerde pincode is niet geldig!"
         },

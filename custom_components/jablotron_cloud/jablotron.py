@@ -8,8 +8,6 @@ from .types import JablotronServiceData
 class JablotronClient:
     """Client for Jablotron Cloud API."""
 
-    services: dict[int, JablotronServiceData] = {}
-
     def __init__(
         self,
         username: str,
@@ -23,6 +21,8 @@ class JablotronClient:
         self._password = password
         self._default_pin = default_pin
         self.force_arm = force_arm
+        # Service data must be per-instance so multiple config entries never share or mix account data.
+        self.services: dict[int, JablotronServiceData] = {}
 
     def get_bridge(self) -> Jablotron:
         """Return Jablotron bridge instance."""

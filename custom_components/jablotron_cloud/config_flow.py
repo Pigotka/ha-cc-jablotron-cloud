@@ -15,21 +15,25 @@ from homeassistant.const import (
     CONF_TIMEOUT,
     CONF_USERNAME,
 )
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig, TextSelectorType
 
 from .const import DOMAIN
 from .jablotron import JablotronClient
 
 _LOGGER = logging.getLogger(__name__)
 
+PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
+
 
 def get_schema(config: dict) -> vol.Schema:
     """Return config flow schema."""
 
+    # Never pre-fill the stored PIN so it cannot be read back from the form.
     return vol.Schema(
         {
             vol.Required(CONF_USERNAME, default=config.get(CONF_USERNAME, "")): str,
-            vol.Required(CONF_PASSWORD): str,
-            vol.Optional(CONF_PIN, default=config.get(CONF_PIN, "")): str,
+            vol.Required(CONF_PASSWORD): PASSWORD_SELECTOR,
+            vol.Optional(CONF_PIN, default=""): PASSWORD_SELECTOR,
             vol.Optional(CONF_FORCE_UPDATE, default=config.get(CONF_FORCE_UPDATE, True)): bool,
             vol.Optional(CONF_SCAN_INTERVAL, default=config.get(CONF_SCAN_INTERVAL, 30)): int,
             vol.Optional(CONF_TIMEOUT, default=config.get(CONF_TIMEOUT, 15)): int,
@@ -76,6 +80,14 @@ async def handle_configuration(
         )
 
 
+def keep_stored_pin_if_empty(user_input: dict) -> dict:
+    """Return user input without an empty PIN so the stored PIN is kept on update."""
+
+    if not user_input.get(CONF_PIN):
+        return {key: value for key, value in user_input.items() if key != CONF_PIN}
+    return user_input
+
+
 def validate_credentials(user_input: dict) -> None:
     """Validate that user entered valid credentials."""
 
@@ -118,7 +130,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(  # type: ignore[return-value]
                 config_entry,
                 unique_id=config_entry.unique_id,
-                data={**config_entry.data, **user_input},
+                data={**config_entry.data, **keep_stored_pin_if_empty(user_input)},
             )
         return flow_result  # type: ignore[return-value]
 
@@ -142,6 +154,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_update_reload_and_abort(  # type: ignore[return-value]
                 config_entry,
                 unique_id=config_entry.unique_id,
-                data={**config_entry.data, **user_input},
+                data={**config_entry.data, **keep_stored_pin_if_empty(user_input)},
             )
         return flow_result  # type: ignore[return-value]

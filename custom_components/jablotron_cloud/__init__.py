@@ -66,7 +66,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: JablotronConfigEntry) ->
 async def async_unload_entry(hass: HomeAssistant, entry: JablotronConfigEntry) -> bool:
     """Unload Jablotron Cloud integration."""
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        # Stop scheduled refreshes, then drop cached service data so a reload starts from a clean state.
+        await entry.runtime_data.coordinator.async_shutdown()
+        entry.runtime_data.client.services.clear()
+    return unload_ok
 
 
 async def update_listener(hass: HomeAssistant, entry: JablotronConfigEntry) -> None:
@@ -132,7 +137,7 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
 
         # Define coordinator attributes
         self._client = client
-        self._scan_timeout = scan_timeout
+        self.scan_timeout = scan_timeout
 
         # Initialize data update coordinator
         super().__init__(
@@ -212,31 +217,33 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
 
         try:
             # Update data within a certain time limit
-            async with timeout(self._scan_timeout):
+            async with timeout(self.scan_timeout):
                 # Get fresh Jablotron Cloud session
                 _LOGGER.debug("Updating data for available Jablotron services")
                 bridge: Jablotron = await self.hass.async_add_executor_job(self._client.get_bridge)
 
                 # Update data for all available services
-                for service_id in self._client.services:
+                # Iterate over a snapshot and mutate via local reference so an unload clearing
+                # the services dict mid-refresh cannot break the loop.
+                for service_id, service_data in list(self._client.services.items()):
                     # Get service details
-                    service_type = self._client.services[service_id]["type"]
+                    service_type = service_data["type"]
 
                     # Update sections data from Jablotron Cloud
                     _LOGGER.debug("Updating sections data for service '%d'", service_id)
-                    self._client.services[service_id]["alarm"] = await self.hass.async_add_executor_job(
+                    service_data["alarm"] = await self.hass.async_add_executor_job(
                         bridge.get_sections, service_id, service_type
                     )
 
                     # Update gates data from Jablotron Cloud
                     _LOGGER.debug("Updating gates data for service '%d'", service_id)
-                    self._client.services[service_id]["gates"] = await self.hass.async_add_executor_job(
+                    service_data["gates"] = await self.hass.async_add_executor_job(
                         bridge.get_programmable_gates, service_id, service_type
                     )
 
                     # Update thermo devices data from Jablotron Cloud
                     _LOGGER.debug("Updating thermo devices data for service '%d'", service_id)
-                    self._client.services[service_id]["thermo"] = await self.hass.async_add_executor_job(
+                    service_data["thermo"] = await self.hass.async_add_executor_job(
                         bridge.get_thermo_devices, service_id, service_type
                     )
 
