@@ -123,26 +123,22 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         """Whether code is required for arm actions."""
         return self._authorization_required
 
-    async def async_alarm_disarm(self, code: str | None = None) -> None:
-        """Send disarm request."""
+    async def _async_control_section(self, state: str, code: str | None, force: bool = False) -> bool:
+        """Send a control request for this section and return whether it succeeded."""
         try:
-            code = self.code_or_default_code(code)
-            _LOGGER.debug("Sending disarm for section '%s' (service %d)", self._section_name, self._service_id)
             async with timeout(self.coordinator.scan_timeout):
                 bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
-                disarm_successful = await self.hass.async_add_executor_job(
+                return await self.hass.async_add_executor_job(
                     partial(
                         bridge.control_section,
                         service_id=self._service_id,
                         service_type=self._service_type,
                         component_id=self._section_id,
-                        state="DISARM",
+                        state=state,
                         pin_code=code,
+                        force=force,
                     )
                 )
-            if disarm_successful:
-                self._attr_alarm_state = AlarmControlPanelState.DISARMING
-                self.async_write_ha_state()
         except TimeoutError as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="action_timeout") from ex
         except UnauthorizedException as ex:
@@ -150,74 +146,42 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
 
+    async def async_alarm_disarm(self, code: str | None = None) -> None:
+        """Send disarm request."""
+        code = self.code_or_default_code(code)
+        _LOGGER.debug("Sending disarm for section '%s' (service %d)", self._section_name, self._service_id)
+        if await self._async_control_section("DISARM", code):
+            self._attr_alarm_state = AlarmControlPanelState.DISARMING
+            self.async_write_ha_state()
+
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm request."""
-        try:
-            code = self.code_or_default_code(code)
-            _LOGGER.debug(
-                "Sending arm away for section '%s' (service %d, force=%s)",
-                self._section_name,
-                self._service_id,
-                self._client.force_arm,
-            )
-            async with timeout(self.coordinator.scan_timeout):
-                bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
-                arm_successful = await self.hass.async_add_executor_job(
-                    partial(
-                        bridge.control_section,
-                        service_id=self._service_id,
-                        service_type=self._service_type,
-                        component_id=self._section_id,
-                        state="ARM",
-                        pin_code=code,
-                        force=self._client.force_arm,
-                    )
-                )
-            if arm_successful:
-                self._attr_alarm_state = AlarmControlPanelState.ARMING
-                self.async_write_ha_state()
-        except TimeoutError as ex:
-            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="action_timeout") from ex
-        except UnauthorizedException as ex:
-            raise ConfigEntryAuthFailed(ex) from ex
-        except IncorrectPinCodeException as ex:
-            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
+        code = self.code_or_default_code(code)
+        _LOGGER.debug(
+            "Sending arm away for section '%s' (service %d, force=%s)",
+            self._section_name,
+            self._service_id,
+            self._client.force_arm,
+        )
+        if await self._async_control_section("ARM", code, force=self._client.force_arm):
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
+            self.async_write_ha_state()
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send partial arm request."""
         if not self._supports_partial_arm:
             return
 
-        try:
-            code = self.code_or_default_code(code)
-            _LOGGER.debug(
-                "Sending arm home for section '%s' (service %d, force=%s)",
-                self._section_name,
-                self._service_id,
-                self._client.force_arm,
-            )
-            async with timeout(self.coordinator.scan_timeout):
-                bridge = await self.hass.async_add_executor_job(self._client.get_bridge)
-                arm_successful = await self.hass.async_add_executor_job(
-                    partial(
-                        bridge.control_section,
-                        service_id=self._service_id,
-                        service_type=self._service_type,
-                        component_id=self._section_id,
-                        state="PARTIAL_ARM",
-                        pin_code=code,
-                        force=self._client.force_arm,
-                    )
-                )
-            if arm_successful:
-                self._attr_alarm_state = AlarmControlPanelState.ARMING
-                self.async_write_ha_state()
-        except TimeoutError as ex:
-            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="action_timeout") from ex
-        except UnauthorizedException as ex:
-            raise ConfigEntryAuthFailed(ex) from ex
-        except IncorrectPinCodeException as ex:
-            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
+        code = self.code_or_default_code(code)
+        _LOGGER.debug(
+            "Sending arm home for section '%s' (service %d, force=%s)",
+            self._section_name,
+            self._service_id,
+            self._client.force_arm,
+        )
+        if await self._async_control_section("PARTIAL_ARM", code, force=self._client.force_arm):
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
+            self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
