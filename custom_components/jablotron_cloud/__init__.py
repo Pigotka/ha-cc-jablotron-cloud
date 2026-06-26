@@ -205,6 +205,8 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                     len(self._client.services[service_id]["thermo"]),
                 )
         except UnauthorizedException as ex:
+            # Invalidate the cached session so the next attempt forces a fresh login
+            self._client.invalidate_session()
             raise ConfigEntryAuthFailed(ex) from ex
 
     async def _async_update_data(self) -> None:
@@ -245,4 +247,6 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
                         service_id,
                     )
         except UnauthorizedException as ex:
+            # Invalidate the cached session so the next attempt forces a fresh login
+            self._client.invalidate_session()
             raise ConfigEntryAuthFailed(ex) from ex

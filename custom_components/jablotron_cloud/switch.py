@@ -119,6 +119,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
                 self._attr_is_on = True
                 self.async_write_ha_state()
         except UnauthorizedException as ex:
+            self._client.invalidate_session()
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex
@@ -144,6 +145,7 @@ class JablotronProgrammableGate(JablotronEntity, SwitchEntity):
                 self._attr_is_on = False
                 self.async_write_ha_state()
         except UnauthorizedException as ex:
+            self._client.invalidate_session()
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="invalid_pin") from ex

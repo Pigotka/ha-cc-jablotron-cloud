@@ -175,6 +175,7 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
             else:
                 _LOGGER.error("Failed to set heating mode for device '%s'", self._thermo_device_id)
         except UnauthorizedException as ex:
+            self._client.invalidate_session()
             raise ConfigEntryAuthFailed(ex) from ex
         except Exception as ex:
             _LOGGER.exception("Failed to control thermo device '%s'", self._thermo_device_id)
@@ -214,6 +215,7 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
             else:
                 _LOGGER.error("Failed to set temperature for device '%s'", self._thermo_device_id)
         except UnauthorizedException as ex:
+            self._client.invalidate_session()
             raise ConfigEntryAuthFailed(ex) from ex
         except Exception as ex:
             _LOGGER.exception("Failed to set temperature for thermo device '%s'", self._thermo_device_id)
