@@ -15,10 +15,11 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import JablotronClient, JablotronConfigEntry, JablotronData, JablotronDataCoordinator
-from .const import DOMAIN
+from .const import DOMAIN, EVENT_SECTION_BYPASSED, SIGNAL_SECTION_BYPASSED
 from .entity import JablotronEntity
 from .utils import find_section_alarm_event, get_component_state, section_state_to_alarm_state
 
@@ -127,7 +128,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
         try:
             code = self.code_or_default_code(code)
             _LOGGER.debug("Sending disarm for section '%s' (service %d)", self._section_name, self._service_id)
-            disarm_successful = await self.hass.async_add_executor_job(
+            disarm_result = await self.hass.async_add_executor_job(
                 partial(
                     self._client.control_section,
                     service_id=self._service_id,
@@ -137,7 +138,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                     pin_code=code,
                 )
             )
-            if disarm_successful:
+            if disarm_result.success:
                 self._attr_alarm_state = AlarmControlPanelState.DISARMING
                 self.async_write_ha_state()
         except UnauthorizedException as ex:
@@ -159,7 +160,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                 self._service_id,
                 self._client.force_arm,
             )
-            arm_successful = await self.hass.async_add_executor_job(
+            arm_result = await self.hass.async_add_executor_job(
                 partial(
                     self._client.control_section,
                     service_id=self._service_id,
@@ -170,9 +171,11 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                     force=self._client.force_arm,
                 )
             )
-            if arm_successful:
+            if arm_result.success:
                 self._attr_alarm_state = AlarmControlPanelState.ARMING
                 self.async_write_ha_state()
+            if arm_result.bypassed:
+                self._report_bypass(arm_result.control_error)
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
@@ -195,7 +198,7 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                 self._service_id,
                 self._client.force_arm,
             )
-            arm_successful = await self.hass.async_add_executor_job(
+            arm_result = await self.hass.async_add_executor_job(
                 partial(
                     self._client.control_section,
                     service_id=self._service_id,
@@ -206,9 +209,11 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
                     force=self._client.force_arm,
                 )
             )
-            if arm_successful:
+            if arm_result.success:
                 self._attr_alarm_state = AlarmControlPanelState.ARMING
                 self.async_write_ha_state()
+            if arm_result.bypassed:
+                self._report_bypass(arm_result.control_error)
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except IncorrectPinCodeException as ex:
@@ -217,6 +222,33 @@ class JablotronAlarmControlPanel(JablotronEntity, AlarmControlPanelEntity):
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="rate_limited") from ex
         except Exception as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="alarm_control_failed") from ex
+
+    @callback
+    def _report_bypass(self, control_error: str | None) -> None:
+        """Announce that this section could only be armed by bypassing active devices.
+
+        The cloud names nothing but the section in its bypass error, so this is as specific as
+        the report can get. Consumers wanting to show which door or window was open have to
+        correlate the section with their own contact sensors.
+        """
+
+        _LOGGER.info(
+            "Section '%s' was armed with active devices bypassed (%s)",
+            self._section_name,
+            control_error,
+        )
+        payload = {
+            "service_id": self._service_id,
+            "service_name": self._service_name,
+            "section_id": self._section_id,
+            "section_name": self._section_name,
+            "control_error": control_error,
+        }
+
+        # The bus event drives user automations, the dispatcher signal drives this section's
+        # bypass binary sensor.
+        self.hass.bus.async_fire(EVENT_SECTION_BYPASSED, payload)
+        async_dispatcher_send(self.hass, SIGNAL_SECTION_BYPASSED, payload)
 
     @callback
     def _handle_coordinator_update(self) -> None:

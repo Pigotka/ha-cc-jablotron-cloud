@@ -1,5 +1,7 @@
 """Constants for Jablotron Cloud integration."""
 
+from datetime import timedelta
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import HVACMode
 from homeassistant.const import Platform
@@ -15,6 +17,23 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.SWITCH,
 ]
+
+# Section bypass constants
+# Control errors meaning "devices in this section are active and must be bypassed to arm".
+# The cloud reports them against the section only; the API exposes no endpoint listing
+# detectors, so a bypass can never be attributed to the door or window that caused it.
+BYPASS_CONTROL_ERRORS = ("BYPASS", "BYPASS-TIMED")
+
+# How long a section's bypass binary sensor stays on after an arm that required a bypass.
+# A bypass is only ever reported in the reply to a control request, so the sensor is a short
+# pulse meant to drive a notification or a pop-up rather than a lasting state.
+BYPASS_SIGNAL_DURATION = timedelta(seconds=30)
+
+# Fired on the Home Assistant bus for every arm that required active devices to be bypassed.
+EVENT_SECTION_BYPASSED = f"{DOMAIN}_section_bypassed"
+
+# Dispatcher signal telling a section's bypass binary sensor to pulse.
+SIGNAL_SECTION_BYPASSED = f"{DOMAIN}_section_bypassed_signal"
 
 # Jablotron states as Home Assistant states
 SECTION_STATE_AS_ALARM_STATE = {
