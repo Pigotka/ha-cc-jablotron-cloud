@@ -6,7 +6,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from jablotronpy import TooManyRequestsException, UnauthorizedException
+from jablotronpy import ControlActionException, TooManyRequestsException, UnauthorizedException
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityFeature, HVACAction, HVACMode
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -217,6 +217,13 @@ class JablotronClimate(JablotronEntity, ClimateEntity):
             raise ConfigEntryAuthFailed(ex) from ex
         except TooManyRequestsException as ex:
             raise HomeAssistantError(translation_domain=DOMAIN, translation_key="rate_limited") from ex
+        except ControlActionException as ex:
+            if self._attr_hvac_mode != HVACMode.OFF:
+                _LOGGER.exception("Failed to set temperature for thermo device '%s'", self._thermo_device_id)
+                raise HomeAssistantError(translation_domain=DOMAIN, translation_key="control_failed") from ex
+
+            # The device rejects a target temperature while it is switched off.
+            raise HomeAssistantError(translation_domain=DOMAIN, translation_key="thermostat_off") from ex
         except Exception as ex:
             _LOGGER.exception("Failed to set temperature for thermo device '%s'", self._thermo_device_id)
             raise HomeAssistantError(

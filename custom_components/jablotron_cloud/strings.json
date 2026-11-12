@@ -58,6 +58,9 @@
         },
         "switch_control_failed": {
             "message": "Failed to control programmable gate!"
+        },
+        "thermostat_off": {
+            "message": "Thermostat is switched off, turn it on before setting the temperature!"
         }
     }
 }
