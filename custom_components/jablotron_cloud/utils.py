@@ -68,13 +68,7 @@ def get_service_alarm_events(alarm: JablotronSections) -> list[dict]:
 
 
 def get_event_section_name(message: str, section_names: list[str]) -> str | None:
-    """Return the name of the section the event message refers to, or None when it names no known section.
-
-    The Jablotron event message ends with the section name, e.g. 'Alarm - <detector>, Section <section name>',
-    but the wording before the name is localized ('Sezione', 'Sekce', ...) and the section part can be missing
-    entirely. Only the trailing section name is therefore matched; the longest match wins so that
-    'Guest House' is not mistaken for 'House'.
-    """
+    """Return the name of the section the event message refers to, or None when it names no known section."""
 
     normalized_message = message.strip().casefold()
     matches: list[str] = []
