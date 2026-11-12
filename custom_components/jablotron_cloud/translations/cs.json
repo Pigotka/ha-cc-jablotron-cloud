@@ -58,6 +58,9 @@
         },
         "switch_control_failed": {
             "message": "Nepodařilo se ovládat programovatelnou bránu!"
+        },
+        "thermostat_off": {
+            "message": "Termostat je vypnutý, před nastavením teploty jej zapněte!"
         }
     }
 }

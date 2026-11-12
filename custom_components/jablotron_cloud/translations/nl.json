@@ -58,6 +58,9 @@
         },
         "switch_control_failed": {
             "message": "Kan de programmeerbare poort niet bedienen!"
+        },
+        "thermostat_off": {
+            "message": "De thermostaat is uitgeschakeld, schakel hem in voordat u de temperatuur instelt!"
         }
     }
 }
