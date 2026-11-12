@@ -95,7 +95,7 @@ def find_section_alarm_event(alarm: JablotronSections, section_name: str) -> dic
     """Return the most recent ALARM event that applies to the given section, or None.
 
     An event applies to the section its message ends with. An ALARM event that names no known section
-    cannot be attributed, so it applies to every section rather than being silently dropped.
+    cannot be attributed, so it is ignored and the raw event is logged to help identify its format.
     """
 
     section_names = [section["name"] for section in alarm.get("sections", [])]
@@ -106,8 +106,8 @@ def find_section_alarm_event(alarm: JablotronSections, section_name: str) -> dic
 
         event_section_name = get_event_section_name(event.get("message", ""), section_names)
         if event_section_name is None:
-            _LOGGER.debug("Alarm event names no known section, applying it to all: %s", event.get("message"))
-        if event_section_name in (None, section_name):
+            _LOGGER.debug("Ignoring alarm event that names no known section (%s): %s", section_names, event)
+        elif event_section_name == section_name:
             matches.append(event)
 
     return matches[-1] if matches else None
