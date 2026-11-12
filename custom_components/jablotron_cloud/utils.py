@@ -106,7 +106,7 @@ def find_section_alarm_event(alarm: JablotronSections, section_name: str) -> dic
 
         event_section_name = get_event_section_name(event.get("message", ""), section_names)
         if event_section_name is None:
-            _LOGGER.debug("Ignoring alarm event that names no known section (%s): %s", section_names, event)
+            _LOGGER.warning("Ignoring alarm event that names no known section (%s): %s", section_names, event)
         elif event_section_name == section_name:
             matches.append(event)
 
