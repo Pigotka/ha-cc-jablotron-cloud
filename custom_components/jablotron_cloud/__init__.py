@@ -3,11 +3,19 @@
 from __future__ import annotations
 
 from asyncio import timeout
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from jablotronpy import TooManyRequestsException, UnauthorizedException
+from jablotronpy import (
+    JablotronApiException,
+    JablotronProgrammableGates,
+    JablotronSections,
+    JablotronThermoDevice,
+    TooManyRequestsException,
+    UnauthorizedException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -169,55 +177,101 @@ class JablotronDataCoordinator(DataUpdateCoordinator):
 
                     continue
 
-                # Initialize service data
-                self._client.services[service_id] = JablotronServiceData(name=service_name, type=service_type)
-
-                # Get additional service data
-                _LOGGER.debug("Fetching additional data for service '%d'", service_id)
-                self._client.services[service_id]["firmware"] = (
-                    (await self.hass.async_add_executor_job(self._client.get_service_information, service_id))
-                    .get("device", {})
-                    .get("firmware", "N/A")
+                # Discover what the service provides. Endpoints the service type does not have
+                # (e.g. sections of a ventilation unit) are treated as empty instead of failing setup.
+                _LOGGER.debug("Discovering available sections for service '%d' of type '%s'", service_id, service_type)
+                alarm: JablotronSections = await self._async_discover(
+                    self._client.get_sections, service_id, service_type, "sections", {}
                 )
 
-                # Get available sections from Jablotron Cloud
-                _LOGGER.debug("Discovering available sections for service '%d'", service_id)
-                self._client.services[service_id]["alarm"] = await self.hass.async_add_executor_job(
-                    self._client.get_sections, service_id, service_type
-                )
-
-                # Get available gates from Jablotron Cloud
                 _LOGGER.debug("Discovering available gates for service '%d'", service_id)
-                self._client.services[service_id]["gates"] = await self.hass.async_add_executor_job(
-                    self._client.get_programmable_gates, service_id, service_type
+                gates: JablotronProgrammableGates = await self._async_discover(
+                    self._client.get_programmable_gates, service_id, service_type, "programmable gates", {}
                 )
 
-                # Get available thermo devices from Jablotron Cloud
                 _LOGGER.debug("Discovering available thermo devices for service '%d'", service_id)
-                self._client.services[service_id]["thermo"] = await self.hass.async_add_executor_job(
-                    self._client.get_thermo_devices, service_id, service_type
+                thermo: list[JablotronThermoDevice] = await self._async_discover(
+                    self._client.get_thermo_devices, service_id, service_type, "thermo devices", []
                 )
 
                 # Remember which endpoints returned data so polling can skip the empty ones.
                 # Devices added to the installation later are only picked up after a reload,
                 # which matches how entities themselves are only discovered during setup.
-                self._capabilities[service_id] = JablotronServiceCapabilities(
-                    has_gates=bool(self._client.services[service_id]["gates"].get("programmableGates")),
-                    has_sections=bool(self._client.services[service_id]["alarm"].get("sections")),
-                    has_thermo=bool(self._client.services[service_id]["thermo"]),
+                capabilities = JablotronServiceCapabilities(
+                    has_gates=bool(gates.get("programmableGates")),
+                    has_sections=bool(alarm.get("sections")),
+                    has_thermo=bool(thermo),
                 )
 
                 _LOGGER.debug(
                     "Service '%d' discovered: %d sections, %d gates, %d thermo devices",
                     service_id,
-                    len(self._client.services[service_id]["alarm"].get("sections", [])),
-                    len(self._client.services[service_id]["gates"].get("programmableGates", [])),
-                    len(self._client.services[service_id]["thermo"]),
+                    len(alarm.get("sections", [])),
+                    len(gates.get("programmableGates", [])),
+                    len(thermo),
+                )
+
+                # Ignore services that provide nothing the integration can represent
+                if not (capabilities.has_gates or capabilities.has_sections or capabilities.has_thermo):
+                    _LOGGER.warning(
+                        "Service '%d' of type '%s' provides no sections, gates or thermo devices, ignoring",
+                        service_id,
+                        service_type,
+                    )
+
+                    continue
+
+                # Get additional service data
+                _LOGGER.debug("Fetching additional data for service '%d'", service_id)
+                firmware = (
+                    (await self.hass.async_add_executor_job(self._client.get_service_information, service_id))
+                    .get("device", {})
+                    .get("firmware", "N/A")
+                )
+
+                self._capabilities[service_id] = capabilities
+                self._client.services[service_id] = JablotronServiceData(
+                    name=service_name,
+                    type=service_type,
+                    firmware=firmware,
+                    alarm=alarm,
+                    gates=gates,
+                    thermo=thermo,
                 )
         except UnauthorizedException as ex:
             raise ConfigEntryAuthFailed(ex) from ex
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with Jablotron Cloud: {ex}") from ex
+
+    async def _async_discover[T](
+        self,
+        fetch: Callable[[int, str], T],
+        service_id: int,
+        service_type: str,
+        description: str,
+        default: T,
+    ) -> T:
+        """Fetch data of one endpoint for a service, returning the default when the endpoint is unavailable.
+
+        Jablotron Cloud rejects endpoints a service type does not provide (e.g. sections of a
+        ventilation unit), so an API error here means "no data" rather than a failed setup.
+        Rate limiting is re-raised so the whole setup backs off instead.
+        """
+
+        try:
+            return await self.hass.async_add_executor_job(fetch, service_id, service_type)
+        except TooManyRequestsException:
+            raise
+        except JablotronApiException as ex:
+            _LOGGER.debug(
+                "Service '%d' of type '%s' does not provide %s, skipping: %s",
+                service_id,
+                service_type,
+                description,
+                ex,
+            )
+
+            return default
 
     async def _async_update_data(self) -> None:
         """Update data for all platforms."""

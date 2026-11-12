@@ -45,7 +45,7 @@ async def async_setup_entry(
 
         _LOGGER.debug("Getting available sections for service '%s'", service_name)
         alarm = service_data["alarm"]
-        for section in alarm["sections"]:
+        for section in alarm.get("sections", []):
             section_name = section["name"]
             section_id = section["cloud-component-id"]
             partial_arm_enabled = section["partial-arm-enabled"]
