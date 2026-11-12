@@ -18,8 +18,6 @@ from .const import ALARM_EVENT_TYPE, PG_STATE_AS_BINARY_STATE, SECTION_STATE_AS_
 
 _LOGGER = logging.getLogger(__name__)
 
-SECTION_TOKEN = ", Section "
-
 
 @callback
 def update_unique_id(entity_entry: RegistryEntry) -> dict | None:
@@ -69,19 +67,42 @@ def get_service_alarm_events(alarm: JablotronSections) -> list[dict]:
     return alarm.get("service-states", {}).get("events", []) or []
 
 
-def find_section_alarm_event(alarm: JablotronSections, section_name: str) -> dict | None:
-    """Return the most recent ALARM event whose message references the given section, or None.
+def get_event_section_name(message: str, section_names: list[str]) -> str | None:
+    """Return the name of the section the event message refers to, or None when it names no known section."""
 
-    The Jablotron event message format is 'Alarm - <detector>, Section <section name>'.
-    The section is identified by the substring after the literal ', Section ' token.
+    normalized_message = message.strip().casefold()
+    matches: list[str] = []
+    for section_name in section_names:
+        normalized_name = section_name.strip().casefold()
+        if not normalized_name or not normalized_message.endswith(normalized_name):
+            continue
+
+        # Require a word boundary so that section 'House' does not match 'Section Warehouse'.
+        preceding = normalized_message[: -len(normalized_name)]
+        if not preceding or not preceding[-1].isalnum():
+            matches.append(section_name)
+
+    return max(matches, key=len, default=None)
+
+
+def find_section_alarm_event(alarm: JablotronSections, section_name: str) -> dict | None:
+    """Return the most recent ALARM event that applies to the given section, or None.
+
+    An event applies to the section its message ends with. An ALARM event that names no known section
+    cannot be attributed, so it is ignored and the raw event is logged to help identify its format.
     """
 
-    matches = [
-        event
-        for event in get_service_alarm_events(alarm)
-        if event.get("type") == ALARM_EVENT_TYPE
-        and event.get("message", "").rsplit(SECTION_TOKEN, 1)[-1].strip() == section_name
-    ]
+    section_names = [section["name"] for section in alarm.get("sections", [])]
+    matches: list[dict] = []
+    for event in get_service_alarm_events(alarm):
+        if event.get("type") != ALARM_EVENT_TYPE:
+            continue
+
+        event_section_name = get_event_section_name(event.get("message", ""), section_names)
+        if event_section_name is None:
+            _LOGGER.warning("Ignoring alarm event that names no known section (%s): %s", section_names, event)
+        elif event_section_name == section_name:
+            matches.append(event)
 
     return matches[-1] if matches else None
 
