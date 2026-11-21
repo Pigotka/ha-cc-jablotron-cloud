@@ -4,7 +4,7 @@ version = "0.7.3"
 description = "Home Assistant custom component for Jablotron Cloud."
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = ["jablotronpy==0.7.0"]
+dependencies = ["jablotronpy==0.7.5"]
 
 [project.urls]
 Homepage = "https://github.com/Pigotka/ha-cc-jablotron-cloud"
