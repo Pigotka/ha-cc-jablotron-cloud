@@ -72,6 +72,6 @@ These rules come from the Home Assistant developer docs and apply to all code in
 - `ruff format custom_components/` - format
 
 ## Dependencies
-- Runtime: `jablotronpy==0.7.3` (pinned in manifest.json)
+- Runtime: `jablotronpy==0.7.5` (pinned in manifest.json)
 - Dev: `homeassistant>=2024.11.0`, `ruff>=0.14.10` (in pyproject.toml)
 - No tests exist in this repo

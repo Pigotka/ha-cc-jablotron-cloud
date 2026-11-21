@@ -25,6 +25,11 @@ SECTION_STATE_AS_ALARM_STATE = {
 
 PG_STATE_AS_BINARY_STATE = {"ON": True, "OFF": False}
 
+# Jablotron Cloud often answers a thermo device change with 502 Bad Gateway and applies it 20-50 seconds
+# later, so jablotronpy polls the device to confirm the change instead of failing straight away.
+THERMO_CONFIRM_INTERVAL = 5
+THERMO_CONFIRM_TIMEOUT = 45
+
 # Jablotron thermo device heating modes as HVAC modes
 THERMO_STATE_TO_HVAC_MODE = {
     "OFF": HVACMode.OFF,

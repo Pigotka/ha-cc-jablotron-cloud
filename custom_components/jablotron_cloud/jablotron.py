@@ -16,6 +16,7 @@ from jablotronpy import (
     UnauthorizedException,
 )
 
+from .const import THERMO_CONFIRM_INTERVAL, THERMO_CONFIRM_TIMEOUT
 from .types import JablotronServiceData
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,10 +161,20 @@ class JablotronClient:
         temperature: float | None = None,
         service_type: str = "JA100",
     ) -> bool:
-        """Set thermo device of the specified service to the desired heating mode or temperature."""
+        """Set thermo device of the specified service to the desired heating mode or temperature.
+
+        After a 502/504 response the device is polled until it reflects the change, so this call can block
+        for up to THERMO_CONFIRM_TIMEOUT seconds.
+        """
 
         return self._api_call(
             lambda bridge: bridge.control_thermo_device(
-                service_id, object_device_id, heating_mode, temperature, service_type
+                service_id,
+                object_device_id,
+                heating_mode,
+                temperature,
+                service_type,
+                confirm_timeout=THERMO_CONFIRM_TIMEOUT,
+                confirm_interval=THERMO_CONFIRM_INTERVAL,
             )
         )
